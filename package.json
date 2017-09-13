@@ -1,0 +1,24 @@
+{
+  "name": "p2p-db-osm",
+  "description": "Extend p2p-db to support OpenStreetMap data types.",
+  "author": "Stephen Whitmore <sww@eight.net>",
+  "version": "0.0.0",
+  "repository": {
+    "url": "git://github.com/noffle/p2p-db-osm.git"
+  },
+  "homepage": "https://github.com/noffle/p2p-db-osm",
+  "bugs": "https://github.com/noffle/p2p-db-osm/issues",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js",
+    "lint": "standard"
+  },
+  "keywords": [
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "tape": "~4.6.2",
+    "standard": "~10.0.0"
+  },
+  "license": "ISC"
+}
