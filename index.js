@@ -36,6 +36,11 @@ Osm.prototype.create = function (element, cb) {
       if (errs.length) return cb(errs[0])
       break
     }
+    case 'changeset': {
+      errs = checkNewChangeset(element)
+      if (errs.length) return cb(errs[0])
+      break
+    }
     default: {
       return cb(new Error('unknown value for "type" field'))
     }
@@ -67,13 +72,15 @@ function checkNewElement (elm) {
     res.push(new Error('"type" field must be a string'))
   }
 
-  if (!elm.changeset) {
-    res.push(new Error('missing "changeset" field'))
+  if (elm.type !== 'changeset') {
+    if (!elm.changeset) {
+      res.push(new Error('missing "changeset" field'))
+    }
+    if (typeof elm.changeset !== 'string') {
+      res.push(new Error('"changeset" field must be a string'))
+    }
+    // TODO: check that ensures changeset exists
   }
-  if (typeof elm.changeset !== 'string') {
-    res.push(new Error('"changeset" field must be a string'))
-  }
-  // TODO: check that ensures changeset exists
 
   if (elm.timestamp && !/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\dZ$/.test(elm.timestamp)) {
     res.push(new Error('"timestamp" must be in String.prototype.toUTCString format'))
@@ -190,4 +197,10 @@ function checkNewRelation (rel) {
 // String -> Boolean
 function isValidRelationMemberType (type) {
   return ['node', 'way', 'relation'].indexOf(type) !== -1
+}
+
+// OsmChangeset -> [Error]
+function checkNewChangeset (changes) {
+  var res = []
+  return res
 }
