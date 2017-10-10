@@ -51,9 +51,8 @@ Osm.prototype.create = function (element, cb) {
 
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
-  console.log('would write', key, '->', element)
-  return cb(null)
-  // this.db.put('/' + element.type + '/' + id, element, cb)
+  console.log('writing', key, '->', element)
+  this.db.put(key, element, cb)
 }
 
 // generateId :: String
