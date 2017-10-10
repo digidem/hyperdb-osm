@@ -3,17 +3,21 @@ module.exports = Osm
 function Osm (db) {
   if (!(this instanceof Osm)) return new Osm(db)
   if (!db) throw new Error('missing param "db"')
+
+  this.db = db
 }
 
 // OsmElement -> Error
 Osm.prototype.create = function (element, cb) {
+  // Element format verification
   var errs = checkNewElement(element)
   if (errs.length) return cb(null, errs[0])
 
+  // Element sub-type format verification
   switch (element.type) {
     case 'node': {
-      populateNodeDefaults(node)
-      errs = checkNewNode(node)
+      populateNodeDefaults(element)
+      errs = checkNewNode(element)
       if (errs.length) return cb(null, errs[0])
       break
     }
@@ -21,6 +25,12 @@ Osm.prototype.create = function (element, cb) {
       return cb(null, new Error('unknown value for "type" field'))
     }
   }
+
+  // TODO: Generate unique ID for element
+  var id = null
+
+  // Write the element to the db
+  this.db.put('/' + element.type + '/' + id, element, cb)
 }
 
 // TODO: async sanity check phase that ensures changeset exists, etc
@@ -81,4 +91,3 @@ function populateNodeDefaults (node) {
     node.timestamp = (new Date()).toISOString()
   }
 }
-
