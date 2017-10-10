@@ -1,36 +1,48 @@
 module.exports = Osm
 
-function Osm (db) {
-  if (!(this instanceof Osm)) return new Osm(db)
+var randomBytes = require('randombytes')
+
+function Osm (db, opts) {
+  if (!(this instanceof Osm)) return new Osm(db, opts)
   if (!db) throw new Error('missing param "db"')
+  opts = opts || {}
 
   this.db = db
+  this.dbPrefix = opts.prefix || '/osm'
 }
 
 // OsmElement -> Error
 Osm.prototype.create = function (element, cb) {
   // Element format verification
   var errs = checkNewElement(element)
-  if (errs.length) return cb(null, errs[0])
+  if (errs.length) return cb(errs[0])
 
   // Element sub-type format verification
   switch (element.type) {
     case 'node': {
       populateNodeDefaults(element)
       errs = checkNewNode(element)
-      if (errs.length) return cb(null, errs[0])
+      if (errs.length) return cb(errs[0])
       break
     }
     default: {
-      return cb(null, new Error('unknown value for "type" field'))
+      return cb(new Error('unknown value for "type" field'))
     }
   }
 
-  // TODO: Generate unique ID for element
-  var id = null
+  // Generate unique ID for element
+  var id = generateId()
 
   // Write the element to the db
-  this.db.put('/' + element.type + '/' + id, element, cb)
+  var key = this.dbPrefix + '/elements/' + id
+  console.log('would write', key, '->', element)
+  return cb(null)
+  // this.db.put('/' + element.type + '/' + id, element, cb)
+}
+
+// generateId :: String
+function generateId () {
+  return randomBytes(8).toString('hex')
 }
 
 // TODO: async sanity check phase that ensures changeset exists, etc
@@ -51,6 +63,10 @@ function checkNewElement (elm) {
   }
   if (typeof elm.changeset !== 'string') {
     res.push(new Error('"changeset" field must be a string'))
+  }
+
+  if (elm.timestamp && !/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\dZ$/.test(elm.timestamp)) {
+    res.push(new Error('"timestamp" must be in String.prototype.toUTCString format'))
   }
 
   return res

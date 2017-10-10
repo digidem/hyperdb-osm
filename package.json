@@ -13,9 +13,10 @@
     "test": "tape test/*.js",
     "lint": "standard"
   },
-  "keywords": [
-  ],
-  "dependencies": {},
+  "keywords": [],
+  "dependencies": {
+    "randombytes": "^2.0.5"
+  },
   "devDependencies": {
     "tape": "~4.6.2",
     "standard": "~10.0.0"
