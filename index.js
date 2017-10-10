@@ -107,7 +107,7 @@ function checkNewNode (node) {
   if (typeof node.lat !== 'string') {
     res.push(new Error('"lat" field must be string'))
   }
-  if (Number(node.lat) < -90 || Number(node.lon) > 90) {
+  if (Number(node.lat) < -90 || Number(node.lat) > 90) {
     res.push(new Error('"lat" field must be between -90 and 90'))
   }
 
@@ -117,8 +117,8 @@ function checkNewNode (node) {
   if (typeof node.lon !== 'string') {
     res.push(new Error('"lon" field must be string'))
   }
-  if (Number(node.lat) < -180 || Number(node.lon) > 180) {
-    res.push(new Error('"lat" field must be between -180 and 180'))
+  if (Number(node.lon) < -180 || Number(node.lon) > 180) {
+    res.push(new Error('"lon" field must be between -180 and 180'))
   }
 
   return res
