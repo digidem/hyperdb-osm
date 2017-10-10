@@ -3,7 +3,7 @@ var hyper = require('hyperdb')
 var Osm = require('..')
 var ram = require('random-access-memory')
 
-test('creation verification: node', function (t) {
+test('create node', function (t) {
   t.plan(1)
 
   var db = hyper(ram, { valueEncoding: 'json' })
@@ -22,7 +22,7 @@ test('creation verification: node', function (t) {
   })
 })
 
-test('creation verification: way', function (t) {
+test('create way', function (t) {
   t.plan(1)
 
   var db = hyper(ram, { valueEncoding: 'json' })
@@ -39,7 +39,7 @@ test('creation verification: way', function (t) {
   })
 })
 
-test('creation verification: relation', function (t) {
+test('create relation', function (t) {
   t.plan(1)
 
   var db = hyper(ram, { valueEncoding: 'json' })
@@ -64,7 +64,7 @@ test('creation verification: relation', function (t) {
   })
 })
 
-test('creation verification: changeset', function (t) {
+test('create changeset', function (t) {
   t.plan(1)
 
   var db = hyper(ram, { valueEncoding: 'json' })
