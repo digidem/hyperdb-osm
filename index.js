@@ -31,6 +31,11 @@ Osm.prototype.create = function (element, cb) {
       if (errs.length) return cb(errs[0])
       break
     }
+    case 'relation': {
+      errs = checkNewRelation(element)
+      if (errs.length) return cb(errs[0])
+      break
+    }
     default: {
       return cb(new Error('unknown value for "type" field'))
     }
@@ -131,4 +136,58 @@ function checkNewWay (way) {
   // TODO: check that all refs exist in the db
 
   return res
+}
+
+// OsmRelation -> [Error]
+function checkNewRelation (rel) {
+  var res = []
+
+  res = res.concat(checkNewElement(rel))
+
+  if (!rel.tags) {
+    res.push(new Error('missing "tags" field'))
+  }
+  if (rel.tags && typeof rel.tags !== 'object') {
+    res.push(new Error('"tags" field must be an object'))
+  }
+  if (rel.tags && Object.keys(rel.tags).length < 1) {
+    res.push(new Error('"tags" field must have >= 1 members'))
+  }
+
+  if (!rel.members) {
+    res.push(new Error('missing "members" field'))
+  }
+  if (!Array.isArray(rel.members)) {
+    res.push(new Error('"members" field must be an array'))
+  }
+
+  if (rel.members && Array.isArray(rel.members)) { 
+    ;(rel.members ? rel.members : []).forEach(function (member, idx) {
+      if (!member.type) {
+        res.push(new Error('"members['+idx+']" missing "type" field'))
+      }
+      if (typeof member.type !== 'string') {
+        res.push(new Error('"members['+idx+'].type" must be a string'))
+      }
+      if (!isValidRelationMemberType(member.type)) {
+        res.push(new Error('"members['+idx+'].type" must be one of node, way, relation'))
+      }
+
+      if (!member.id) {
+        res.push(new Error('"members['+idx+']" missing "id" field'))
+      }
+      if (typeof member.id !== 'string') {
+        res.push(new Error('"members['+idx+'].id" must be a string'))
+      }
+    })
+  }
+
+  // TODO: check that all members exist in the db
+
+  return res
+}
+
+// String -> Boolean
+function isValidRelationMemberType (type) {
+  return ['node', 'way', 'relation'].indexOf(type) !== -1
 }
