@@ -17,11 +17,17 @@ Osm.prototype.create = function (element, cb) {
   var errs = checkNewElement(element)
   if (errs.length) return cb(errs[0])
 
+  populateElementDefaults(element)
+
   // Element sub-type format verification
   switch (element.type) {
     case 'node': {
-      populateNodeDefaults(element)
       errs = checkNewNode(element)
+      if (errs.length) return cb(errs[0])
+      break
+    }
+    case 'way': {
+      errs = checkNewWay(element)
       if (errs.length) return cb(errs[0])
       break
     }
@@ -45,8 +51,6 @@ function generateId () {
   return randomBytes(8).toString('hex')
 }
 
-// TODO: async sanity check phase that ensures changeset exists, etc
-
 // OsmElement -> [Error]
 function checkNewElement (elm) {
   var res = []
@@ -64,6 +68,7 @@ function checkNewElement (elm) {
   if (typeof elm.changeset !== 'string') {
     res.push(new Error('"changeset" field must be a string'))
   }
+  // TODO: check that ensures changeset exists
 
   if (elm.timestamp && !/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\dZ$/.test(elm.timestamp)) {
     res.push(new Error('"timestamp" must be in String.prototype.toUTCString format'))
@@ -72,7 +77,14 @@ function checkNewElement (elm) {
   return res
 }
 
-// Node -> [Error]
+// OsmElement -> undefined [Mutate]
+function populateElementDefaults (elm) {
+  if (!elm.timestamp) {
+    elm.timestamp = (new Date()).toISOString()
+  }
+}
+
+// OsmNode -> [Error]
 function checkNewNode (node) {
   var res = []
 
@@ -101,9 +113,22 @@ function checkNewNode (node) {
   return res
 }
 
-// OsmNode -> undefined [Mutate]
-function populateNodeDefaults (node) {
-  if (!node.timestamp) {
-    node.timestamp = (new Date()).toISOString()
+// OsmWay -> [Error]
+function checkNewWay (way) {
+  var res = []
+
+  res = res.concat(checkNewElement(way))
+
+  if (!way.refs) {
+    res.push(new Error('missing "refs" field'))
   }
+  if (!Array.isArray(way.refs)) {
+    res.push(new Error('"refs" field must be an array'))
+  }
+  if (way.refs && way.refs.length < 3) {
+    res.push(new Error('"refs" field must have > 2 nodes'))
+  }
+  // TODO: check that all refs exist in the db
+
+  return res
 }
