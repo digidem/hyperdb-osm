@@ -1,6 +1,6 @@
 {
   "name": "p2p-db-osm",
-  "description": "Pluggable API for p2p-db to add OpenStreetMap data types.",
+  "description": "API for p2p-db adding OpenStreetMap data types and querying.",
   "author": "Stephen Whitmore <sww@eight.net>",
   "version": "0.0.0",
   "repository": {
