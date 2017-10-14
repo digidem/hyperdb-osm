@@ -27,7 +27,25 @@ Osm.prototype.create = function (element, cb) {
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
   console.log('writing', key, '->', element)
-  this.db.put(key, element, cb)
+  this.db.put(key, element, function (err) {
+    if (err) cb(err)
+    else cb(null, id)
+  })
+}
+
+// OsmId -> [OsmElement]
+Osm.prototype.get = function (id, cb) {
+  var key = this.dbPrefix + '/elements/' + id
+  this.db.get(key, function (err, res) {
+    if (err) return cb(err)
+
+    cb(null, res.map(function (node) {
+        var v = node.value
+        v.id = id
+        v.version = '???'
+        return v
+      })
+  })
 }
 
 // generateId :: String

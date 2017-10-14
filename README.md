@@ -60,6 +60,12 @@ Install the API into the p2p-db `db` under the name `"osm"`.
 Create the new OSM element `element` and add it to the database. An `id` and
 `version` will be generated, and returned as the 2nd and 3rd parameters on `cb`.
 
+### db.osm.get(id, cb)
+
+Fetch all of the newest OSM elements with the ID `id`. In the case that multiple
+peers modified an element prior to sync'ing with each other, there may be
+multiple latest elements ("heads") for the ID.
+
 ## Install
 
 With [npm](https://npmjs.org/) installed, run
