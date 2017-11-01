@@ -12,13 +12,14 @@ var ram = require('random-access-memory')
 
 var hyper = hyperdb(ram, { valueEncoding: 'json' })
 var db = P2P(hyper)
-db.install('osm', new Osm(db))
+db.install('osm', new Osm(hyper))
 
 var node = {
   type: 'node',
   lat: '-12.7',
   lon: '1.3',
-  tags: { feature: 'water fountain' }
+  tags: { feature: 'water fountain' },
+  changeset: 'abcdef'
 }
 
 db.osm.create(node, function (err, id) {
@@ -77,4 +78,3 @@ $ npm install p2p-db-osm
 ## License
 
 ISC
-
