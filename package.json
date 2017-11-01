@@ -2,7 +2,7 @@
   "name": "p2p-db-osm",
   "description": "API for p2p-db adding OpenStreetMap data types and querying.",
   "author": "Stephen Whitmore <sww@eight.net>",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repository": {
     "url": "git://github.com/noffle/p2p-db-osm.git"
   },
