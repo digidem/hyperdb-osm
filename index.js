@@ -44,7 +44,7 @@ Osm.prototype.get = function (id, cb) {
         v.id = id
         v.version = '???'
         return v
-      })
+    }))
   })
 }
 
