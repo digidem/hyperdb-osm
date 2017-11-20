@@ -13,7 +13,16 @@
     "test": "tape test/*.js",
     "lint": "standard"
   },
-  "keywords": [],
+  "keywords": [
+    "osm",
+    "osm-p2p",
+    "osm-p2p-db",
+    "openstreetmap",
+    "p2p",
+    "peer",
+    "hyperdb",
+    "p2p-db"
+  ],
   "dependencies": {
     "randombytes": "^2.0.5"
   },
