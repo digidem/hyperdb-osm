@@ -68,6 +68,15 @@ Fetch all of the newest OSM elements with the ID `id`. In the case that multiple
 peers modified an element prior to sync'ing with each other, there may be
 multiple latest elements ("heads") for the ID.
 
+### db.osm.put(id, element, cb)
+
+Update an existing element with ID `id` to be the OSM element `element`. The new
+element should have all fields that the OSM element would have. The `type` of
+the element cannot be changed.
+
+If the value of ID currently returns two or more elements, this new value will
+replace them all.
+
 ## Install
 
 With [npm](https://npmjs.org/) installed, run

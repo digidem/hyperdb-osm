@@ -27,7 +27,7 @@ Osm.prototype.create = function (element, cb) {
 
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
-  console.log('writing', key, '->', element)
+  console.log('creating', key, '->', element)
   this.db.put(key, element, function (err) {
     if (err) cb(err)
     else cb(null, id)
@@ -46,6 +46,37 @@ Osm.prototype.get = function (id, cb) {
         v.version = '???'
         return v
     }))
+  })
+}
+
+// OsmId, OsmElement -> OsmElement
+Osm.prototype.put = function (id, element, cb) {
+  var self = this
+
+  this.get(id, function (err, elms) {
+    // Element already exists
+    if (elms.length === 0) {
+      return cb(new Error('element id', id, 'doesnt exist'))
+    }
+
+    // Ensure existing type matches new type
+    var type = elms[0].type
+    if (type !== element.type) {
+      return cb(new Error('existing element is type ' + type
+        + ' but new element is type ' + element.type))
+    }
+
+    // Check for type errors
+    var errs = checkElement(element)
+    if (errs.length) return cb(errs[0])
+
+    // Write to hyperdb
+    var key = self.dbPrefix + '/elements/' + id
+    console.log('updating', key, '->', element)
+    self.db.put(key, element, function (err) {
+      if (err) cb(err)
+      cb()
+    })
   })
 }
 
