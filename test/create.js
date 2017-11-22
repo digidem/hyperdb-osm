@@ -1,13 +1,14 @@
 var test = require('tape')
 var hyper = require('hyperdb')
+var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
 
 test('create unknown element', function (t) {
   t.plan(1)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   var node = {
     type: 'cortada',
@@ -17,7 +18,7 @@ test('create unknown element', function (t) {
     timestamp: '2017-10-10T19:55:08.570Z'
   }
 
-  osm.create(node, function (err) {
+  db.osm.create(node, function (err) {
     t.ok(err instanceof Error)
   })
 })
@@ -41,11 +42,11 @@ test('create good nodes', function (t) {
 
   t.plan(nodes.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   nodes.forEach(function (node) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.error(err)
     })
   })
@@ -105,11 +106,11 @@ test('create bad nodes', function (t) {
 
   t.plan(nodes.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   nodes.forEach(function (node, idx) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.ok(err instanceof Error, 'nodes['+idx+']')
     })
   })
@@ -139,11 +140,11 @@ test('create good ways', function (t) {
 
   t.plan(ways.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   ways.forEach(function (node) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.error(err)
     })
   })
@@ -188,11 +189,11 @@ test('create bad ways', function (t) {
 
   t.plan(ways.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   ways.forEach(function (node, idx) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.ok(err instanceof Error, 'ways['+idx+']')
     })
   })
@@ -233,11 +234,11 @@ test('create good relations', function (t) {
 
   t.plan(relations.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   relations.forEach(function (node) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.error(err)
     })
   })
@@ -295,11 +296,11 @@ test('create bad relations', function (t) {
 
   t.plan(relations.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   relations.forEach(function (node, idx) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.ok(err instanceof Error, 'relations['+idx+']')
     })
   })
@@ -318,11 +319,11 @@ test('create good changesets', function (t) {
 
   t.plan(changesets.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   changesets.forEach(function (node) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.error(err)
     })
   })
@@ -338,11 +339,11 @@ test('create bad changesets', function (t) {
 
   t.plan(changesets.length)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   changesets.forEach(function (node, idx) {
-    osm.create(node, function (err) {
+    db.osm.create(node, function (err) {
       t.ok(err instanceof Error, 'changesets['+idx+']')
     })
   })
@@ -351,14 +352,14 @@ test('create bad changesets', function (t) {
 test('create changeset', function (t) {
   t.plan(1)
 
-  var db = hyper(ram, { valueEncoding: 'json' })
-  var osm = Osm(db)
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
 
   var changes = {
     type: 'changeset'
   }
 
-  osm.create(changes, function (err) {
+  db.osm.create(changes, function (err) {
     t.error(err)
   })
 })

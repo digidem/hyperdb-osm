@@ -4,12 +4,13 @@ var randomBytes = require('randombytes')
 
 var checkElement = require('./lib/check-element')
 
-function Osm (db, opts) {
-  if (!(this instanceof Osm)) return new Osm(db, opts)
-  if (!db) throw new Error('missing param "db"')
+function Osm (p2pdb, opts) {
+  if (!(this instanceof Osm)) return new Osm(p2pdb, opts)
+  if (!p2pdb) throw new Error('missing param "p2pdb"')
   opts = opts || {}
 
-  this.db = db
+  this._p2pdb = p2pdb
+  this.db = this._p2pdb.hyper
   this.dbPrefix = opts.prefix || '/osm'
 }
 

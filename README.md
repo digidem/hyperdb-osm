@@ -1,6 +1,7 @@
 # p2p-db-osm
 
-> API for p2p-db adding OpenStreetMap data types and querying.
+> Pluggable API for [p2p-db][p2p-db] adding OpenStreetMap data types and
+> querying.
 
 ## Usage
 
@@ -12,7 +13,7 @@ var ram = require('random-access-memory')
 
 var hyper = hyperdb(ram, { valueEncoding: 'json' })
 var db = P2P(hyper)
-db.install('osm', new Osm(hyper))
+db.install('osm', Osm(db))
 
 var node = {
   type: 'node',
@@ -52,9 +53,9 @@ got elements at 203202390532
 var Osm = require('p2p-db-osm')
 ```
 
-### db.install('osm', Osm)
+### db.install('osm', new Osm(db))
 
-Install the API into the p2p-db `db` under the name `"osm"`.
+Install the API into the [p2p-db](p2p-db) `db` under the name `"osm"`.
 
 ### db.osm.create(element, cb)
 
@@ -78,3 +79,6 @@ $ npm install p2p-db-osm
 ## License
 
 ISC
+
+[p2p-db]: https://github.com/noffle/p2p-db
+
