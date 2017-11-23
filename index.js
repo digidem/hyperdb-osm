@@ -4,12 +4,14 @@ var randomBytes = require('randombytes')
 
 var checkElement = require('./lib/check-element')
 
-function Osm (p2pdb, opts) {
-  if (!(this instanceof Osm)) return new Osm(p2pdb, opts)
+function Osm (p2pdb, geo, opts) {
+  if (!(this instanceof Osm)) return new Osm(p2pdb, geo, opts)
   if (!p2pdb) throw new Error('missing param "p2pdb"')
+  if (!geo) throw new Error('missing param "geo"')
   opts = opts || {}
 
   this._p2pdb = p2pdb
+  this.geo = geo
   this.db = this._p2pdb.hyper
   this.dbPrefix = opts.prefix || '/osm'
 }
@@ -81,6 +83,10 @@ Osm.prototype.put = function (id, element, cb) {
       cb()
     })
   })
+}
+
+// BoundingBox, Opts -> (Stream or Callback)
+Osm.prototype.query = function (bbox, opts, cb) {
 }
 
 // generateId :: String

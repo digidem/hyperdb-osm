@@ -10,10 +10,13 @@ var P2P = require('p2p-db')
 var Osm = require('p2p-db-osm')
 var hyperdb = require('hyperdb')
 var ram = require('random-access-memory')
+var GeoStore = require('grid-point-store')
+var memdb = require('memdb')
 
+var geo = GeoStore(memdb())
 var hyper = hyperdb(ram, { valueEncoding: 'json' })
 var db = P2P(hyper)
-db.install('osm', Osm(db))
+db.install('osm', Osm(db, geo))
 
 var node = {
   type: 'node',
@@ -53,9 +56,15 @@ got elements at 203202390532
 var Osm = require('p2p-db-osm')
 ```
 
-### db.install('osm', new Osm(db))
+### db.install('osm', new Osm(db, geo))
 
 Install the API into the [p2p-db](p2p-db) `db` under the name `"osm"`.
+
+`geo` is an instance of
+[grid-point-store](https://github.com/noffle/grid-point-store). This is used to
+maintain a geographic index of the OSM data.
+
+*TODO: make this an abstract-point-store or something*
 
 ### db.osm.create(element, cb)
 

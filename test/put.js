@@ -3,12 +3,15 @@ var hyper = require('hyperdb')
 var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
+var Geo = require('grid-point-store')
+var memdb = require('memdb')
 
 test('update to id that doesnt exist', function (t) {
   t.plan(1)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   var node = {
     type: 'node',
@@ -28,7 +31,8 @@ test('update to different type', function (t) {
   t.plan(2)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   var node = {
     type: 'node',
@@ -43,8 +47,7 @@ test('update to different type', function (t) {
     nodes: ['1']
   }
 
-  db.osm.create(node, function (err, id) {
-    t.error(err)
+  db.osm.create(node, function (err, id) { t.error(err)
     db.osm.put(id, way, function (err) {
       t.ok(err instanceof Error)
     })
@@ -71,7 +74,8 @@ test('update good nodes', function (t) {
   t.plan(2)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   db.osm.create(nodes[0], function (err, id) {
     t.error(err)
@@ -136,7 +140,8 @@ test('update bad nodes', function (t) {
   t.plan(nodes.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   db.osm.create({
     type: 'node',
@@ -156,7 +161,8 @@ test('delete a node', function (t) {
   t.plan(5)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   var node = {
     type: 'node',

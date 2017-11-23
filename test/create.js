@@ -3,12 +3,20 @@ var hyper = require('hyperdb')
 var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
+var Geo = require('grid-point-store')
+var memdb = require('memdb')
 
 test('incorrect db init', function (t) {
-  t.plan(1)
+  t.plan(2)
 
   try {
     Osm()
+  } catch (e) {
+    t.ok(e instanceof Error)
+  }
+
+  try {
+    Osm(P2P(hyper(ram, { valueEncoding: 'json' })))
   } catch (e) {
     t.ok(e instanceof Error)
   }
@@ -18,7 +26,8 @@ test('create unknown element', function (t) {
   t.plan(1)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   var node = {
     type: 'cortada',
@@ -53,7 +62,8 @@ test('create good nodes', function (t) {
   t.plan(nodes.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   nodes.forEach(function (node) {
     db.osm.create(node, function (err) {
@@ -131,7 +141,8 @@ test('create bad nodes', function (t) {
   t.plan(nodes.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   nodes.forEach(function (node, idx) {
     db.osm.create(node, function (err) {
@@ -165,7 +176,8 @@ test('create good ways', function (t) {
   t.plan(ways.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   ways.forEach(function (node) {
     db.osm.create(node, function (err) {
@@ -214,7 +226,8 @@ test('create bad ways', function (t) {
   t.plan(ways.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   ways.forEach(function (node, idx) {
     db.osm.create(node, function (err) {
@@ -259,7 +272,8 @@ test('create good relations', function (t) {
   t.plan(relations.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   relations.forEach(function (node) {
     db.osm.create(node, function (err) {
@@ -353,7 +367,8 @@ test('create bad relations </pun>', function (t) {
   t.plan(relations.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   relations.forEach(function (node, idx) {
     db.osm.create(node, function (err) {
@@ -376,7 +391,8 @@ test('create good changesets', function (t) {
   t.plan(changesets.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   changesets.forEach(function (node) {
     db.osm.create(node, function (err) {
@@ -396,7 +412,8 @@ test('create bad changesets', function (t) {
   t.plan(changesets.length)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   changesets.forEach(function (node, idx) {
     db.osm.create(node, function (err) {
@@ -409,7 +426,8 @@ test('create changeset', function (t) {
   t.plan(1)
 
   var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  db.install('osm', Osm(db))
+  var geo = Geo(memdb())
+  db.install('osm', Osm(db, geo))
 
   var changes = {
     type: 'changeset'
