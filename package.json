@@ -25,7 +25,9 @@
     "p2p-db"
   ],
   "dependencies": {
-    "randombytes": "^2.0.5"
+    "randombytes": "^2.0.5",
+    "read-only-stream": "^2.0.0",
+    "through2": "^2.0.3"
   },
   "devDependencies": {
     "grid-point-store": "^1.2.0",

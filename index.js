@@ -1,8 +1,11 @@
 module.exports = Osm
 
 var randomBytes = require('randombytes')
+var through = require('through2')
+var readonly = require('read-only-stream')
 
 var checkElement = require('./lib/check-element')
+var validateBoundingBox = require('./lib/utils').validateBoundingBox
 
 function Osm (p2pdb, geo, opts) {
   if (!(this instanceof Osm)) return new Osm(p2pdb, geo, opts)
@@ -44,10 +47,10 @@ Osm.prototype.get = function (id, cb) {
     res = res || []
 
     cb(null, res.map(function (node) {
-        var v = node.value
-        v.id = id
-        v.version = '???'
-        return v
+      var v = node.value
+      v.id = id
+      v.version = '???'
+      return v
     }))
   })
 }
@@ -67,8 +70,8 @@ Osm.prototype.put = function (id, element, cb) {
     // Ensure existing type matches new type
     var type = elms[0].type
     if (type !== element.type) {
-      return cb(new Error('existing element is type ' + type
-        + ' but new element is type ' + element.type))
+      return cb(new Error('existing element is type ' + type +
+        ' but new element is type ' + element.type))
     }
 
     // Check for type errors
@@ -87,6 +90,36 @@ Osm.prototype.put = function (id, element, cb) {
 
 // BoundingBox, Opts -> (Stream or Callback)
 Osm.prototype.query = function (bbox, opts, cb) {
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  if (!opts) opts = {}
+  var result = cb ? [] : through()
+
+  var err = validateBoundingBox(bbox)
+  if (err) return end(err)
+
+  // TODO(sww): do query work
+  return end()
+
+  // Push an element to the stream or callback
+  function push (elm) {
+    if (cb) result.push(elm)
+    else result.push(elm)
+  }
+
+  // Terminate the callback/stream; optionally with an error
+  function end (err) {
+    if (cb) {
+      if (err) cb(err)
+      else cb(null, result)
+    } else {
+      if (err) result.emit('error', err)
+      else result.push(null)
+      return readonly(result)
+    }
+  }
 }
 
 // generateId :: String
