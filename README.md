@@ -86,12 +86,33 @@ the element cannot be changed.
 If the value of ID currently returns two or more elements, this new value will
 replace them all.
 
-### Deletions
+### var rs = db.osm.query(bbox[, cb])
+
+Retrieves all `node`s, `way`s, and `relation`s touching the bounding box `bbox`.
+
+`bbox` is expected to be of the format `[[minLat, maxLat], [minLon, maxLon]]`.
+Latitude runs between `(-85, 85)`, and longitude between `(-180, 180)`.
+
+A callback parameter `cb` is optional. If given, it will be called as
+`cb(err, elements)`. If not provided or set to `null`, a Readable stream will be
+returned that can be read from as elements are emitted. The distinction between
+the two is that the callback will buffer all results before they are returned,
+but the stream will emit results as they arrive, resulting in much less
+buffering. This can make a large impact on memory use for queries on large
+datasets.
+
+Elements are returned using the semantics defined by the [OSM API v0.6](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_.2Fapi.2F0.6.2Fmap).
+
+## Deletions
 
 To delete an element, [OSM
 specifies](https://wiki.openstreetmap.org/wiki/Elements#Common_attributes) to
 set the `visible` property to `false. This can be done using the `db.osm.put`
 API above.
+
+## Architecture
+
+*TODO: talk about forking data & forking architecture*
 
 ## Install
 
