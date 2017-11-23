@@ -55,6 +55,13 @@ test('create good nodes', function (t) {
 test('create bad nodes', function (t) {
   var nodes = [
     {
+      // no type set
+    },
+    {
+      // non-string type
+      type: 17
+    },
+    {
       type: 'node',
     },
     {
@@ -102,6 +109,13 @@ test('create bad nodes', function (t) {
       lon: '85',
       timestamp: 'soon'
     },
+    {
+      type: 'node',
+      changeset: '9',
+      lat: '31',
+      lon: '85',
+      tags: 'hello'  // non-object tags
+    }
   ]
 
   t.plan(nodes.length)
@@ -244,7 +258,7 @@ test('create good relations', function (t) {
   })
 })
 
-test('create bad relations', function (t) {
+test('create bad relations </pun>', function (t) {
   var relations = [
     {
       type: 'relation'
@@ -277,6 +291,38 @@ test('create bad relations', function (t) {
       members: [
         {
           type: 'sandwich',
+          ref: '17'
+        }
+      ]
+    },
+    {
+      type: 'relation',
+      changeset: '21',
+      tags: { foo: 'bar' },
+      members: [
+        {
+          type: true,
+          ref: '17'
+        }
+      ]
+    },
+    {
+      type: 'relation',
+      changeset: '21',
+      tags: true,
+      members: [
+        {
+          type: 'sandwich',
+          ref: '17'
+        }
+      ]
+    },
+    {
+      type: 'relation',
+      changeset: '21',
+      tags: { foo: 'bar' },
+      members: [
+        {
           ref: '17'
         }
       ]
