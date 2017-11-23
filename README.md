@@ -107,7 +107,7 @@ Elements are returned using the semantics defined by the [OSM API v0.6](https://
 
 To delete an element, [OSM
 specifies](https://wiki.openstreetmap.org/wiki/Elements#Common_attributes) to
-set the `visible` property to `false. This can be done using the `db.osm.put`
+set the `visible` property to `false`. This can be done using the `db.osm.put`
 API above.
 
 ## Architecture
