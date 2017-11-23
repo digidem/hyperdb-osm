@@ -4,6 +4,26 @@ var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
 
+test('update to id that doesnt exist', function (t) {
+  t.plan(1)
+
+  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
+  db.install('osm', Osm(db))
+
+  var node = {
+    type: 'node',
+    changeset: '9',
+    lat: '-11',
+    lon: '-10',
+    timestamp: '2017-10-10T19:55:08.570Z'
+  }
+
+  db.osm.put('1213230', node, function (err) {
+    console.log('err', err)
+    t.ok(err instanceof Error)
+  })
+})
+
 test('update to different type', function (t) {
   t.plan(2)
 
@@ -61,7 +81,7 @@ test('update good nodes', function (t) {
   })
 })
 
-test('create bad nodes', function (t) {
+test('update bad nodes', function (t) {
   var nodes = [
     {
       type: 'node',
@@ -125,7 +145,7 @@ test('create bad nodes', function (t) {
     lon: '17'
   }, function (err, id) {
     nodes.forEach(function (node, idx) {
-      db.osm.create(node, function (err) {
+      db.osm.put(id, node, function (err) {
         t.ok(err instanceof Error, 'nodes['+idx+']')
       })
     })

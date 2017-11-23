@@ -39,6 +39,7 @@ Osm.prototype.get = function (id, cb) {
   var key = this.dbPrefix + '/elements/' + id
   this.db.get(key, function (err, res) {
     if (err) return cb(err)
+    res = res || []
 
     cb(null, res.map(function (node) {
         var v = node.value
@@ -54,9 +55,11 @@ Osm.prototype.put = function (id, element, cb) {
   var self = this
 
   this.get(id, function (err, elms) {
-    // Element already exists
+    if (err) return cb(err)
+
+    // Ensure element already exists
     if (elms.length === 0) {
-      return cb(new Error('element id', id, 'doesnt exist'))
+      return cb(new Error('element with id ' + id + ' doesnt exist'))
     }
 
     // Ensure existing type matches new type

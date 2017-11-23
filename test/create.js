@@ -4,6 +4,16 @@ var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
 
+test('incorrect db init', function (t) {
+  t.plan(1)
+
+  try {
+    Osm()
+  } catch (e) {
+    t.ok(e instanceof Error)
+  }
+})
+
 test('create unknown element', function (t) {
   t.plan(1)
 
