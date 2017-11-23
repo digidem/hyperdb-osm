@@ -11,7 +11,8 @@
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js",
-    "lint": "standard"
+    "lint": "standard",
+    "coverage": "nyc npm test && nyc report --reporter=lcov"
   },
   "keywords": [
     "osm",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "hyperdb": "^1.3.0-rc6",
+    "nyc": "^11.3.0",
     "p2p-db": "1.0.0",
     "random-access-memory": "^2.4.0",
     "standard": "~10.0.0",
