@@ -77,6 +77,13 @@ the element cannot be changed.
 If the value of ID currently returns two or more elements, this new value will
 replace them all.
 
+### Deletions
+
+To delete an element, [OSM
+specifies](https://wiki.openstreetmap.org/wiki/Elements#Common_attributes) to
+set the `visible` property to `false. This can be done using the `db.osm.put`
+API above.
+
 ## Install
 
 With [npm](https://npmjs.org/) installed, run
