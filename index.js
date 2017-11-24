@@ -3,9 +3,11 @@ module.exports = Osm
 var randomBytes = require('randombytes')
 var through = require('through2')
 var readonly = require('read-only-stream')
+var sub = require('subleveldown')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
+var LevelIndex = require('./lib/level-index')
 
 function Osm (opts) {
   if (!(this instanceof Osm)) return new Osm(opts)
@@ -21,6 +23,12 @@ function Osm (opts) {
   this.dbPrefix = opts.prefix || '/osm'
 
   // TODO: create indexes
+  this.changesets = LevelIndex(this.db, sub(this.index, 'cs'), changesetProcessor)
+
+  function changesetProcessor (db, kv, oldKv, next) {
+    console.log('kv', kv)
+    next()
+  }
 }
 
 // OsmElement -> Error
