@@ -1,19 +1,12 @@
 var test = require('tape')
-var hyper = require('hyperdb')
-var P2P = require('p2p-db')
-var Osm = require('..')
-var ram = require('random-access-memory')
-var Geo = require('grid-point-store')
-var memdb = require('memdb')
+var createDb = require('./lib/create-db')
 
 test('query empty dataset', function (t) {
   t.plan(6)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
-  var bbox = [[-85,85],[-180,180]]
+  var bbox = [[-85, 85], [-180, 180]]
 
   db.osm.query(bbox, function (err, elements) {
     t.error(err)

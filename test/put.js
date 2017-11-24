@@ -1,17 +1,10 @@
 var test = require('tape')
-var hyper = require('hyperdb')
-var P2P = require('p2p-db')
-var Osm = require('..')
-var ram = require('random-access-memory')
-var Geo = require('grid-point-store')
-var memdb = require('memdb')
+var createDb = require('./lib/create-db')
 
 test('update to id that doesnt exist', function (t) {
   t.plan(1)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
   var node = {
     type: 'node',
@@ -30,9 +23,7 @@ test('update to id that doesnt exist', function (t) {
 test('update to different type', function (t) {
   t.plan(2)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
   var node = {
     type: 'node',
@@ -47,7 +38,8 @@ test('update to different type', function (t) {
     nodes: ['1']
   }
 
-  db.osm.create(node, function (err, id) { t.error(err)
+  db.osm.create(node, function (err, id) {
+    t.error(err)
     db.osm.put(id, way, function (err) {
       t.ok(err instanceof Error)
     })
@@ -73,9 +65,7 @@ test('update good nodes', function (t) {
 
   t.plan(2)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
   db.osm.create(nodes[0], function (err, id) {
     t.error(err)
@@ -88,7 +78,7 @@ test('update good nodes', function (t) {
 test('update bad nodes', function (t) {
   var nodes = [
     {
-      type: 'node',
+      type: 'node'
     },
     {
       type: 'node',
@@ -134,14 +124,12 @@ test('update bad nodes', function (t) {
       lat: '31',
       lon: '85',
       timestamp: 'soon'
-    },
+    }
   ]
 
-  t.plan(nodes.length)
+  t.plan(nodes.length + 1)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
   db.osm.create({
     type: 'node',
@@ -149,9 +137,10 @@ test('update bad nodes', function (t) {
     lat: '12',
     lon: '17'
   }, function (err, id) {
+    t.error(err)
     nodes.forEach(function (node, idx) {
       db.osm.put(id, node, function (err) {
-        t.ok(err instanceof Error, 'nodes['+idx+']')
+        t.ok(err instanceof Error, 'nodes[' + idx + ']')
       })
     })
   })
@@ -160,9 +149,7 @@ test('update bad nodes', function (t) {
 test('delete a node', function (t) {
   t.plan(5)
 
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm(db, geo))
+  var db = createDb()
 
   var node = {
     type: 'node',
@@ -193,4 +180,3 @@ test('delete a node', function (t) {
     })
   })
 })
-

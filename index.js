@@ -7,16 +7,20 @@ var readonly = require('read-only-stream')
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
 
-function Osm (p2pdb, geo, opts) {
-  if (!(this instanceof Osm)) return new Osm(p2pdb, geo, opts)
-  if (!p2pdb) throw new Error('missing param "p2pdb"')
-  if (!geo) throw new Error('missing param "geo"')
-  opts = opts || {}
+function Osm (opts) {
+  if (!(this instanceof Osm)) return new Osm(opts)
+  if (!opts) throw new Error('missing param "opts"')
+  if (!opts.p2pdb) throw new Error('missing param "opts.p2pdb"')
+  if (!opts.index) throw new Error('missing param "opts.index"')
+  if (!opts.geo) throw new Error('missing param "opts.geo"')
 
-  this._p2pdb = p2pdb
-  this.geo = geo
-  this.db = this._p2pdb.hyper
+  this.p2pdb = opts.p2pdb
+  this.db = this.p2pdb.hyper
+  this.geo = opts.geo
+  this.index = opts.index
   this.dbPrefix = opts.prefix || '/osm'
+
+  // TODO: create indexes
 }
 
 // OsmElement -> Error
