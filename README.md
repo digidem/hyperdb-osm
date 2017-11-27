@@ -114,6 +114,11 @@ datasets.
 
 Elements are returned using the semantics defined by the [OSM API v0.6](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_.2Fapi.2F0.6.2Fmap).
 
+### db.osm.getChanges(id, cb)
+
+Fetch a list of all OSM elements belonging to the changeset `id`. `cb` is called
+with an array of OSM element versions.
+
 ## Deletions
 
 To delete an element, [OSM
