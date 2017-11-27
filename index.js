@@ -7,7 +7,7 @@ var sub = require('subleveldown')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
-var LevelIndex = require('./lib/level-index')
+var LevelIndex = require('hyperdb-index-level')
 
 function Osm (opts) {
   if (!(this instanceof Osm)) return new Osm(opts)
