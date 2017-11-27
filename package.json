@@ -25,6 +25,8 @@
     "p2p-db"
   ],
   "dependencies": {
+    "async": "^2.6.0",
+    "collect-stream": "^1.2.1",
     "hyperdb-index": "^1.0.3",
     "hyperdb-index-level": "^1.0.1",
     "randombytes": "^2.0.5",
