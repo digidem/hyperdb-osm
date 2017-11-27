@@ -55,7 +55,7 @@ Osm.prototype.get = function (id, cb) {
     cb(null, res.map(function (node) {
       var v = node.value
       v.id = id
-      v.version = '???'
+      v.version = 'v' + id  // TODO: TEMP
       return v
     }))
   })
