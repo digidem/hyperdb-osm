@@ -94,6 +94,21 @@ Osm.prototype.put = function (id, element, cb) {
   })
 }
 
+Osm.prototype.batch = function (ops, cb) {
+  var self = this
+  var batch = ops.map(function (op) {
+    var prefix = self.dbPrefix + '/elements/'
+    if (!op.id) op.id = prefix + generateId()
+    else op.id = prefix + op.id
+    return {
+      type: 'put',
+      key: op.id,
+      value: op.value
+    }
+  })
+  this.db.batch(batch, cb)
+}
+
 // TODO: return id or version or both?
 // TODO: return a stream if no cb is given
 // Id -> [Id]
