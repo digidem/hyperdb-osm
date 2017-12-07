@@ -38,7 +38,7 @@ test('create nodes', function (t) {
 test('create + update nodes', function (t) {
   var db = createDb()
 
-  t.plan(5)
+  t.plan(6)
 
   var nodes = [
     {
@@ -72,6 +72,7 @@ test('create + update nodes', function (t) {
     db.osm.batch(batch, function (err) {
       t.error(err)
       db.osm.get(id, function (err, elements) {
+        t.error(err)
         t.equals(elements.length, 1)
         var element = elements[0]
         t.equals(element.id, id)

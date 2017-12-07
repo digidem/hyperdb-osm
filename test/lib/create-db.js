@@ -11,8 +11,7 @@ module.exports = function () {
   db.install('osm', Osm({
     p2pdb: db,
     geo: geo,
-    index: memdb(),
+    index: memdb()
   }))
   return db
 }
-
