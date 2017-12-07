@@ -97,6 +97,13 @@ the element cannot be changed.
 If the value of ID currently returns two or more elements, this new value will
 replace them all.
 
+### db.osm.batch(elements, cb)
+
+Create and update many elements atomically. `elements` is an array of element
+objects to be added or updated. If no `id` field is set, the element is created,
+otherwise it is updated. `cb` is called with an array of IDs that map 1:1 with
+the elements in `elements`.
+
 ### var rs = db.osm.query(bbox[, cb])
 
 Retrieves all `node`s, `way`s, and `relation`s touching the bounding box `bbox`.
