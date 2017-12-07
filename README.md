@@ -97,12 +97,26 @@ the element cannot be changed.
 If the value of ID currently returns two or more elements, this new value will
 replace them all.
 
-### db.osm.batch(elements, cb)
+### db.osm.batch(ops, cb)
 
-Create and update many elements atomically. `elements` is an array of element
-objects to be added or updated. If no `id` field is set, the element is created,
-otherwise it is updated. `cb` is called with an array of IDs that map 1:1 with
-the elements in `elements`.
+Create and update many elements atomically. `ops` is an array of objects
+describing the elements to be added or updated.
+
+```js
+{
+  type: 'put',
+  id: 'id',
+  value: { /* element */ }
+}
+```
+
+If no `id` field is set, the element is created, otherwise it is updated with
+the element `value`.
+
+Currently, doing a batch insert skips many validation checks in order to be as
+fast as possible.
+
+*TODO: accept `opts.validate` or `opts.strict`*
 
 ### var rs = db.osm.query(bbox[, cb])
 
