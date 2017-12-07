@@ -95,19 +95,15 @@ Osm.prototype.put = function (id, element, cb) {
 }
 
 Osm.prototype.batch = function (ops, cb) {
-  var batch = elements.map(function (op) {
-    if (!op.id) {
-      return {
-        type: 'put',
-        key: generateId(),
-        value: op.value
-      }
-    } else {
-      return {
-        type: 'put',
-        key: op.id,
-        value: op.value
-      }
+  var self = this
+  var batch = ops.map(function (op) {
+    var prefix = self.dbPrefix + '/elements/'
+    if (!op.id) op.id = prefix + generateId()
+    else op.id = prefix + op.id
+    return {
+      type: 'put',
+      key: op.id,
+      value: op.value
     }
   })
   this.db.batch(batch, cb)
