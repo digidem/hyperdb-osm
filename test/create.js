@@ -169,13 +169,16 @@ test('create good ways', function (t) {
     }
   ]
 
-  t.plan(ways.length)
+  t.plan(ways.length * 4)
 
   var db = createDb()
 
   ways.forEach(function (node) {
-    db.osm.create(node, function (err) {
+    db.osm.create(node, function (err, elm) {
       t.error(err)
+      t.ok(elm)
+      t.ok(elm.id)
+      t.ok(elm.version)
     })
   })
 })
@@ -261,13 +264,16 @@ test('create good relations', function (t) {
     }
   ]
 
-  t.plan(relations.length)
+  t.plan(relations.length * 4)
 
   var db = createDb()
 
   relations.forEach(function (node) {
-    db.osm.create(node, function (err) {
+    db.osm.create(node, function (err, elm) {
       t.error(err)
+      t.ok(elm)
+      t.ok(elm.id)
+      t.ok(elm.version)
     })
   })
 })
@@ -376,13 +382,16 @@ test('create good changesets', function (t) {
     }
   ]
 
-  t.plan(changesets.length)
+  t.plan(changesets.length * 4)
 
   var db = createDb()
 
   changesets.forEach(function (node) {
-    db.osm.create(node, function (err) {
+    db.osm.create(node, function (err, elm) {
       t.error(err)
+      t.ok(elm)
+      t.ok(elm.id)
+      t.ok(elm.version)
     })
   })
 })
@@ -407,7 +416,7 @@ test('create bad changesets', function (t) {
 })
 
 test('create changeset', function (t) {
-  t.plan(1)
+  t.plan(4)
 
   var db = createDb()
 
@@ -415,7 +424,10 @@ test('create changeset', function (t) {
     type: 'changeset'
   }
 
-  db.osm.create(changes, function (err) {
+  db.osm.create(changes, function (err, elm) {
     t.error(err)
+    t.ok(elm)
+    t.ok(elm.id)
+    t.ok(elm.version)
   })
 })
