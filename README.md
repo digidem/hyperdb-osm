@@ -79,8 +79,9 @@ Valid `opts` include:
 
 ### db.osm.create(element, cb)
 
-Create the new OSM element `element` and add it to the database. An `id` and
-`version` will be generated, and returned as the 2nd and 3rd parameters on `cb`.
+Create the new OSM element `element` and add it to the database. The resulting
+element, populated with the `id` and `version` fields, is returned by the
+callback `cb`.
 
 ### db.osm.get(id, cb)
 
@@ -96,6 +97,8 @@ the element cannot be changed.
 
 If the value of ID currently returns two or more elements, this new value will
 replace them all.
+
+`cb` is called with the new element, including `id` and `version` properties.
 
 ### db.osm.batch(ops, cb)
 
