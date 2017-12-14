@@ -150,7 +150,7 @@ test('update bad nodes', function (t) {
 })
 
 test('delete a node', function (t) {
-  t.plan(5)
+  t.plan(6)
 
   var db = createDb()
 
@@ -176,6 +176,7 @@ test('delete a node', function (t) {
       db.osm.get(elm.id, function (err, elms) {
         t.error(err)
         t.equals(elms.length, 1)
+        t.equals(elms[0].id, elm.id)
         delete elms[0].id
         delete elms[0].version
         t.deepEquals(elms[0], nodeDeletion)
