@@ -15,7 +15,6 @@ test('update to id that doesnt exist', function (t) {
   }
 
   db.osm.put('1213230', node, function (err) {
-    console.log('err', err)
     t.ok(err instanceof Error)
   })
 })
@@ -63,14 +62,18 @@ test('update good nodes', function (t) {
     }
   ]
 
-  t.plan(2)
+  t.plan(6)
 
   var db = createDb()
 
-  db.osm.create(nodes[0], function (err, id) {
+  db.osm.create(nodes[0], function (err, elm1) {
     t.error(err)
-    db.osm.put(id, nodes[1], function (err) {
+    t.ok(elm1)
+    db.osm.put(elm1.id, nodes[1], function (err, elm2) {
       t.error(err)
+      t.ok(elm1)
+      t.equals(elm1.id, elm2.id)
+      t.notEquals(elm1.version, elm2.version)
     })
   })
 })
@@ -166,11 +169,11 @@ test('delete a node', function (t) {
     visible: false
   }
 
-  db.osm.create(node, function (err, id) {
+  db.osm.create(node, function (err, elm) {
     t.error(err)
-    db.osm.put(id, nodeDeletion, function (err) {
+    db.osm.put(elm.id, nodeDeletion, function (err) {
       t.error(err)
-      db.osm.get(id, function (err, elms) {
+      db.osm.get(elm.id, function (err, elms) {
         t.error(err)
         t.equals(elms.length, 1)
         delete elms[0].id

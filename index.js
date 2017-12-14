@@ -97,8 +97,14 @@ Osm.prototype.put = function (id, element, cb) {
     var key = self.dbPrefix + '/elements/' + id
     console.log('updating', key, '->', element)
     self.db.put(key, element, function (err) {
-      if (err) cb(err)
-      cb()
+      if (err) return cb(err)
+      self.db.version(function (err, version) {
+        if (err) return cb(err)
+        var elm = Object.assign({}, element)
+        elm.id = id
+        elm.version = bs58.encode(version)
+        cb(null, elm)
+      })
     })
   })
 }
