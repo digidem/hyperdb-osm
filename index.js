@@ -3,6 +3,7 @@ module.exports = Osm
 var randomBytes = require('randombytes')
 var through = require('through2')
 var readonly = require('read-only-stream')
+var bs58 = require('bs58')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -27,6 +28,8 @@ function Osm (opts) {
 
 // OsmElement -> Error
 Osm.prototype.create = function (element, cb) {
+  var self = this
+
   // Element format verification
   var errs = checkElement(element)
   if (errs.length) return cb(errs[0])
@@ -40,8 +43,14 @@ Osm.prototype.create = function (element, cb) {
   var key = this.dbPrefix + '/elements/' + id
   console.log('creating', key, '->', element)
   this.db.put(key, element, function (err) {
-    if (err) cb(err)
-    else cb(null, id)
+    if (err) return cb(err)
+    self.db.version(function (err, version) {
+      if (err) return cb(err)
+      var elm = Object.assign({}, element)
+      elm.id = id
+      elm.version = bs58.encode(version)
+      cb(null, elm)
+    })
   })
 }
 

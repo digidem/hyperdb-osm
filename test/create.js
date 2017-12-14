@@ -56,13 +56,16 @@ test('create good nodes', function (t) {
     }
   ]
 
-  t.plan(nodes.length)
+  t.plan(nodes.length * 4)
 
   var db = createDb()
 
   nodes.forEach(function (node) {
-    db.osm.create(node, function (err) {
+    db.osm.create(node, function (err, elm) {
       t.error(err)
+      t.ok(elm)
+      t.ok(elm.id)
+      t.ok(elm.version)
     })
   })
 })

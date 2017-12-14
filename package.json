@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "async": "^2.6.0",
+    "bs58": "^4.0.1",
     "collect-stream": "^1.2.1",
     "hyperdb-index": "^1.0.3",
     "hyperdb-index-level": "^1.0.1",
