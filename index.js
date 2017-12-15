@@ -4,6 +4,8 @@ var randomBytes = require('randombytes')
 var through = require('through2')
 var readonly = require('read-only-stream')
 var bs58 = require('bs58')
+var toBuffer = require('to-buffer')
+var varint = require('varint')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -56,6 +58,8 @@ Osm.prototype.create = function (element, cb) {
 
 // OsmId -> [OsmElement]
 Osm.prototype.get = function (id, cb) {
+  var self = this
+
   var key = this.dbPrefix + '/elements/' + id
   this.db.get(key, function (err, res) {
     if (err) return cb(err)
@@ -64,7 +68,7 @@ Osm.prototype.get = function (id, cb) {
     cb(null, res.map(function (node) {
       var v = node.value
       v.id = id
-      v.version = 'v' + id  // TODO: TEMP
+      v.version = bs58.encode(versionFromNode(self.db, node))
       return v
     }))
   })
@@ -175,4 +179,28 @@ function populateElementDefaults (elm) {
   if (!elm.timestamp) {
     elm.timestamp = (new Date()).toISOString()
   }
+}
+
+// HyperDB, Node -> String
+function versionFromNode (db, node) {
+  var heads = node.clock.map(function (seq, idx) {
+    if (node.feed === idx) {
+      return { key: db._writers[idx].key, seq: node.seq }
+    } else {
+      return { key: db._writers[idx].key, seq: seq }
+    }
+  })
+  return headsToVersion(heads)
+}
+
+// [Head] -> Buffer
+function headsToVersion (heads) {
+  var bufAccum = []
+
+  for (var i = 0; i < heads.length; i++) {
+    bufAccum.push(heads[i].key)
+    bufAccum.push(toBuffer(varint.encode(heads[i].seq)))
+  }
+
+  return Buffer.concat(bufAccum)
 }
