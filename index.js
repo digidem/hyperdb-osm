@@ -50,7 +50,7 @@ Osm.prototype.create = function (element, cb) {
       if (err) return cb(err)
       var elm = Object.assign({}, element)
       elm.id = id
-      elm.version = bs58.encode(version)
+      elm.version = id + '@' + bs58.encode(version)
       cb(null, elm)
     })
   })
@@ -106,7 +106,7 @@ Osm.prototype.put = function (id, element, cb) {
         if (err) return cb(err)
         var elm = Object.assign({}, element)
         elm.id = id
-        elm.version = bs58.encode(version)
+        elm.version = id + '@' + bs58.encode(version)
         cb(null, elm)
       })
     })
