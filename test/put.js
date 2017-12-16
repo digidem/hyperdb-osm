@@ -184,3 +184,32 @@ test('delete a node', function (t) {
     })
   })
 })
+
+test('version lookup correctness', function (t) {
+  var db = createDb()
+
+  var changes = {
+    type: 'changeset'
+  }
+
+  db.osm.create(changes, function (err, elm1) {
+    t.error(err)
+    changes.tags = { foo: 'bar' }
+    db.osm.put(elm1.id, changes, function (err, elm2) {
+      t.error(err)
+      t.deepEquals(elm2.tags, { foo: 'bar' })
+      db.osm.getByVersion(elm1.version, function (err, elm3) {
+        t.error(err)
+        t.equals(elm1.id, elm3.id)
+        t.equals(elm1.version, elm3.version)
+        db.osm.getByVersion(elm2.version, function (err, elm4) {
+          t.error(err)
+          t.equals(elm2.id, elm4.id)
+          t.equals(elm2.version, elm4.version)
+          t.deepEquals(elm4.tags, { foo: 'bar' })
+          t.end()
+        })
+      })
+    })
+  })
+})

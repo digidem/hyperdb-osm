@@ -431,3 +431,21 @@ test('create changeset', function (t) {
     t.ok(elm.version)
   })
 })
+
+test('version lookup correctness', function (t) {
+  var db = createDb()
+
+  var changes = {
+    type: 'changeset'
+  }
+
+  db.osm.create(changes, function (err, elm1) {
+    t.error(err)
+    db.osm.getByVersion(elm1.version, function (err, elm2) {
+      t.error(err)
+      t.equals(elm1.id, elm2.id)
+      t.equals(elm1.version, elm2.version)
+      t.end()
+    })
+  })
+})

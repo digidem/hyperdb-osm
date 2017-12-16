@@ -46,11 +46,13 @@ Osm.prototype.create = function (element, cb) {
   console.log('creating', key, '->', element)
   this.db.put(key, element, function (err) {
     if (err) return cb(err)
-    self.db.version(function (err, version) {
+    var w = self.db._localWriter
+    w.head(function (err, node) {
       if (err) return cb(err)
+      var version = encodeVersion(w.key, node.seq)
       var elm = Object.assign({}, element)
       elm.id = id
-      elm.version = id + '@' + bs58.encode(version)
+      elm.version = bs58.encode(version)
       cb(null, elm)
     })
   })
@@ -68,9 +70,22 @@ Osm.prototype.get = function (id, cb) {
     cb(null, res.map(function (node) {
       var v = node.value
       v.id = id
-      v.version = bs58.encode(versionFromNode(self.db, node))
+      v.version = bs58.encode(nodeToVersion(self.db, node))
       return v
     }))
+  })
+}
+
+// OsmVersion -> OsmElement
+Osm.prototype.getByVersion = function (osmVersion, cb) {
+  var version = bs58.decode(osmVersion)
+  versionToNode(this.db, version, function (err, node) {
+    if (err) return cb(err)
+    var elm = Object.assign({
+      id: hyperDbKeyToId(node.key),
+      version: osmVersion
+    }, node.value)
+    cb(null, elm)
   })
 }
 
@@ -102,11 +117,13 @@ Osm.prototype.put = function (id, element, cb) {
     console.log('updating', key, '->', element)
     self.db.put(key, element, function (err) {
       if (err) return cb(err)
-      self.db.version(function (err, version) {
+      var w = self.db._localWriter
+      w.head(function (err, node) {
         if (err) return cb(err)
+        var version = encodeVersion(w.key, node.seq)
         var elm = Object.assign({}, element)
         elm.id = id
-        elm.version = id + '@' + bs58.encode(version)
+        elm.version = bs58.encode(version)
         cb(null, elm)
       })
     })
@@ -181,26 +198,51 @@ function populateElementDefaults (elm) {
   }
 }
 
-// HyperDB, Node -> String
-function versionFromNode (db, node) {
-  var heads = node.clock.map(function (seq, idx) {
-    if (node.feed === idx) {
-      return { key: db._writers[idx].key, seq: node.seq }
-    } else {
-      return { key: db._writers[idx].key, seq: seq }
+// HyperDB, Buffer -> Node
+function versionToNode (db, version, cb) {
+  var feedseq = decodeVersion(version)
+
+  for (var i = 0; i < db._writers.length; i++) {
+    var w = db._writers[i]
+    if (feedseq.key.equals(w.key)) {
+      return w.get(feedseq.seq, cb)
     }
-  })
-  return headsToVersion(heads)
-}
-
-// [Head] -> Buffer
-function headsToVersion (heads) {
-  var bufAccum = []
-
-  for (var i = 0; i < heads.length; i++) {
-    bufAccum.push(heads[i].key)
-    bufAccum.push(toBuffer(varint.encode(heads[i].seq)))
   }
 
-  return Buffer.concat(bufAccum)
+  throw new Error('node doesnt exist in db')
+}
+
+// Buffer -> { key, seq }
+function decodeVersion (version) {
+  var key = version.slice(0, 32)
+  var seq = varint.decode(version, 32)
+  return {
+    key: key,
+    seq: seq
+  }
+}
+
+// HyperDB, Node -> Buffer
+function nodeToVersion (db, node) {
+  for (var i = 0; i < db._writers.length; i++) {
+    var w = db._writers[i]
+    if (i === node.feed) {
+      return encodeVersion(w.key, node.seq)
+    }
+  }
+
+  throw new Error('node doesnt exist in db')
+}
+
+// Buffer, Number -> Buffer
+function encodeVersion (key, seq) {
+  return Buffer.concat([
+    key,
+    toBuffer(varint.encode(seq))
+  ])
+}
+
+function hyperDbKeyToId (key) {
+  var components = key.split('/')
+  return components[components.length - 1]
 }
