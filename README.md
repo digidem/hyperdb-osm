@@ -35,11 +35,11 @@ var node = {
   changeset: 'abcdef'
 }
 
-db.osm.create(node, function (err, id) {
-  console.log('created node with id', id)
-  db.osm.get(id, function (err, elms) {
-    console.log('got elements at', id)
-    elms.forEach(console.log)
+db.osm.create(node, function (err, node) {
+  console.log('created node with id', node.id)
+  db.osm.get(node.id, function (err, elms) {
+    console.log('got elements at', node.id)
+    console.log(elms)
   })
 })
 ```
@@ -47,16 +47,16 @@ db.osm.create(node, function (err, id) {
 outputs
 
 ```
-created node with id 034832050139jfwj
-got elements at 203202390532
-{
-  id: '324230930349',
-  version: '???',
-  type: 'node',
-  lat: '-12.7',
-  lon: '1.3',
-  tags: { feature: 'water fountain' }
-}
+created node with id 78d06921416fe95b
+got elements at 78d06921416fe95b
+[ { type: 'node',
+    lat: '-12.7',
+    lon: '1.3',
+    tags: { feature: 'water fountain' },
+    changeset: 'abcdef',
+    timestamp: '2017-12-16T00:15:55.238Z',
+    id: '78d06921416fe95b',
+    version: 'eAXxidJuq9PoqiDsyrLKfR4jME9hgYnGSozS7BKXUqbDH' } ]
 ```
 
 ## API
