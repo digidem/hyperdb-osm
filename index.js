@@ -1,11 +1,9 @@
 module.exports = Osm
 
-var randomBytes = require('randombytes')
 var through = require('through2')
 var readonly = require('read-only-stream')
 var bs58 = require('bs58')
-var toBuffer = require('to-buffer')
-var varint = require('varint')
+var utils = require('./lib/utils')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -36,10 +34,10 @@ Osm.prototype.create = function (element, cb) {
   var errs = checkElement(element)
   if (errs.length) return cb(errs[0])
 
-  populateElementDefaults(element)
+  utils.populateElementDefaults(element)
 
   // Generate unique ID for element
-  var id = generateId()
+  var id = utils.generateId()
 
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
@@ -49,7 +47,7 @@ Osm.prototype.create = function (element, cb) {
     var w = self.db._localWriter
     w.head(function (err, node) {
       if (err) return cb(err)
-      var version = encodeVersion(w.key, node.seq)
+      var version = utils.encodeVersion(w.key, node.seq)
       var elm = Object.assign({}, element)
       elm.id = id
       elm.version = bs58.encode(version)
@@ -70,7 +68,7 @@ Osm.prototype.get = function (id, cb) {
     cb(null, res.map(function (node) {
       var v = node.value
       v.id = id
-      v.version = bs58.encode(nodeToVersion(self.db, node))
+      v.version = bs58.encode(utils.nodeToVersion(self.db, node))
       return v
     }))
   })
@@ -79,10 +77,10 @@ Osm.prototype.get = function (id, cb) {
 // OsmVersion -> OsmElement
 Osm.prototype.getByVersion = function (osmVersion, cb) {
   var version = bs58.decode(osmVersion)
-  versionToNode(this.db, version, function (err, node) {
+  utils.versionToNode(this.db, version, function (err, node) {
     if (err) return cb(err)
     var elm = Object.assign({
-      id: hyperDbKeyToId(node.key),
+      id: utils.hyperDbKeyToId(node.key),
       version: osmVersion
     }, node.value)
     cb(null, elm)
@@ -120,7 +118,7 @@ Osm.prototype.put = function (id, element, cb) {
       var w = self.db._localWriter
       w.head(function (err, node) {
         if (err) return cb(err)
-        var version = encodeVersion(w.key, node.seq)
+        var version = utils.encodeVersion(w.key, node.seq)
         var elm = Object.assign({}, element)
         elm.id = id
         elm.version = bs58.encode(version)
@@ -134,7 +132,7 @@ Osm.prototype.batch = function (ops, cb) {
   var self = this
   var batch = ops.map(function (op) {
     var prefix = self.dbPrefix + '/elements/'
-    if (!op.id) op.id = prefix + generateId()
+    if (!op.id) op.id = prefix + utils.generateId()
     else op.id = prefix + op.id
     return {
       type: 'put',
@@ -184,65 +182,4 @@ Osm.prototype.query = function (bbox, opts, cb) {
       return readonly(result)
     }
   }
-}
-
-// generateId :: String
-function generateId () {
-  return randomBytes(8).toString('hex')
-}
-
-// OsmElement -> undefined [Mutate]
-function populateElementDefaults (elm) {
-  if (!elm.timestamp) {
-    elm.timestamp = (new Date()).toISOString()
-  }
-}
-
-// HyperDB, Buffer -> Node
-function versionToNode (db, version, cb) {
-  var feedseq = decodeVersion(version)
-
-  for (var i = 0; i < db._writers.length; i++) {
-    var w = db._writers[i]
-    if (feedseq.key.equals(w.key)) {
-      return w.get(feedseq.seq, cb)
-    }
-  }
-
-  throw new Error('node doesnt exist in db')
-}
-
-// Buffer -> { key, seq }
-function decodeVersion (version) {
-  var key = version.slice(0, 32)
-  var seq = varint.decode(version, 32)
-  return {
-    key: key,
-    seq: seq
-  }
-}
-
-// HyperDB, Node -> Buffer
-function nodeToVersion (db, node) {
-  for (var i = 0; i < db._writers.length; i++) {
-    var w = db._writers[i]
-    if (i === node.feed) {
-      return encodeVersion(w.key, node.seq)
-    }
-  }
-
-  throw new Error('node doesnt exist in db')
-}
-
-// Buffer, Number -> Buffer
-function encodeVersion (key, seq) {
-  return Buffer.concat([
-    key,
-    toBuffer(varint.encode(seq))
-  ])
-}
-
-function hyperDbKeyToId (key) {
-  var components = key.split('/')
-  return components[components.length - 1]
 }
