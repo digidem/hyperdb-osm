@@ -56,7 +56,7 @@ test('create + update nodes', function (t) {
     }
   ]
 
-  db.osm.create(nodes[0], function (err, id) {
+  db.osm.create(nodes[0], function (err, node) {
     t.error(err)
 
     nodes[0].lat = '75'
@@ -64,18 +64,18 @@ test('create + update nodes', function (t) {
     var batch = nodes.map(function (node, idx) {
       return {
         type: 'put',
-        id: idx === 0 ? id : undefined,
+        id: idx === 0 ? node.id : undefined,
         value: node
       }
     })
 
     db.osm.batch(batch, function (err) {
       t.error(err)
-      db.osm.get(id, function (err, elements) {
+      db.osm.get(node.id, function (err, elements) {
         t.error(err)
         t.equals(elements.length, 1)
         var element = elements[0]
-        t.equals(element.id, id)
+        t.equals(element.id, node.id)
         t.ok(element.version)
         t.equals(element.lat, '75')
       })
