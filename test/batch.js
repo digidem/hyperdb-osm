@@ -61,11 +61,11 @@ test('create + update nodes', function (t) {
 
     nodes[0].lat = '75'
 
-    var batch = nodes.map(function (node, idx) {
+    var batch = nodes.map(function (elm, idx) {
       return {
         type: 'put',
         id: idx === 0 ? node.id : undefined,
-        value: node
+        value: elm
       }
     })
 
