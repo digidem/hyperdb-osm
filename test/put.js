@@ -37,9 +37,10 @@ test('update to different type', function (t) {
     nodes: ['1']
   }
 
-  db.osm.create(node, function (err, id) {
+  db.osm.create(node, function (err, node) {
     t.error(err)
-    db.osm.put(id, way, function (err) {
+    db.osm.put(node.id, way, function (err) {
+      console.log('err', err)
       t.ok(err instanceof Error)
     })
   })
@@ -139,10 +140,10 @@ test('update bad nodes', function (t) {
     changeset: '12',
     lat: '12',
     lon: '17'
-  }, function (err, id) {
+  }, function (err, node) {
     t.error(err)
     nodes.forEach(function (node, idx) {
-      db.osm.put(id, node, function (err) {
+      db.osm.put(node.id, node, function (err) {
         t.ok(err instanceof Error, 'nodes[' + idx + ']')
       })
     })

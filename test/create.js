@@ -4,9 +4,10 @@ var hyper = require('hyperdb')
 var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
+var memdb = require('memdb')
 
 test('incorrect db init', function (t) {
-  t.plan(2)
+  t.plan(4)
 
   try {
     Osm()
@@ -15,7 +16,24 @@ test('incorrect db init', function (t) {
   }
 
   try {
-    Osm(P2P(hyper(ram, { valueEncoding: 'json' })))
+    Osm({})
+  } catch (e) {
+    t.ok(e instanceof Error)
+  }
+
+  try {
+    Osm({
+      p2pdb: P2P(hyper(ram, { valueEncoding: 'json' }))
+    })
+  } catch (e) {
+    t.ok(e instanceof Error)
+  }
+
+  try {
+    Osm({
+      p2pdb: P2P(hyper(ram, { valueEncoding: 'json' })),
+      index: memdb()
+    })
   } catch (e) {
     t.ok(e instanceof Error)
   }
