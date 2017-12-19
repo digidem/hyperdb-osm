@@ -10,7 +10,6 @@ var P2P = require('p2p-db')
 var Osm = require('p2p-db-osm')
 var hyperdb = require('hyperdb')
 var ram = require('random-access-memory')
-var GeoStore = require('grid-point-store')
 var memdb = require('memdb')
 
 // Create a fresh hyperdb and p2p-db
@@ -20,8 +19,7 @@ var db = P2P(hyper)
 // Create the p2p-db-osm API
 var osm = Osm({
   p2pdb: db,
-  index: memdb(),
-  geo: GeoStore(memdb())
+  index: memdb()
 })
 
 // Plug the OSM API into the p2p-db
@@ -72,10 +70,7 @@ Install the API into the [p2p-db](p2p-db) `db` under the name `"osm"`.
 Valid `opts` include:
 
 - `p2pdb` (required): a p2p-db instance
-- `index` (required): a [LevelUP](https://github.com/level/levelup) instance. There are [many](https://github.com/Level/levelup/wiki/Modules#storage) different storage backends to choose from. Various OSM indexes (changeset lookups, nodes referenced by ways/relations) depend on this.
-- `geo` (required): an instance of [grid-point-store](https://github.com/noffle/grid-point-store). This is used to maintain a geographic index of the OSM data.
-
-*TODO: make this an abstract-point-store or something*
+- `index` (required): a [LevelUP](https://github.com/level/levelup) instance. There are [many](https://github.com/Level/levelup/wiki/Modules#storage) different storage backends to choose from. Various OSM indexes (changeset lookups, nodes referenced by ways/relations, node geo index) store their data here.
 
 ### db.osm.create(element, cb)
 

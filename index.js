@@ -3,6 +3,7 @@ module.exports = Osm
 var through = require('through2')
 var readonly = require('read-only-stream')
 var bs58 = require('bs58')
+var sub = require('subleveldown')
 var utils = require('./lib/utils')
 
 var checkElement = require('./lib/check-element')
@@ -15,17 +16,15 @@ function Osm (opts) {
   if (!opts) throw new Error('missing param "opts"')
   if (!opts.p2pdb) throw new Error('missing param "opts.p2pdb"')
   if (!opts.index) throw new Error('missing param "opts.index"')
-  if (!opts.geo) throw new Error('missing param "opts.geo"')
 
   this.p2pdb = opts.p2pdb
   this.db = this.p2pdb.hyper
-  this.geostore = opts.geo
   this.index = opts.index
   this.dbPrefix = opts.prefix || '/osm'
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
-  this.geo = createGeoIndex(this.db, this.index, this.geostore)
+  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'))
 }
 
 // OsmElement -> Error
