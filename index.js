@@ -8,6 +8,7 @@ var utils = require('./lib/utils')
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
 var createChangesetsIndex = require('./lib/changesets-index')
+var createGeoIndex = require('./lib/geo-index')
 
 function Osm (opts) {
   if (!(this instanceof Osm)) return new Osm(opts)
@@ -18,12 +19,13 @@ function Osm (opts) {
 
   this.p2pdb = opts.p2pdb
   this.db = this.p2pdb.hyper
-  this.geo = opts.geo
+  this.geostore = opts.geo
   this.index = opts.index
   this.dbPrefix = opts.prefix || '/osm'
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
+  this.geo = createGeoIndex(this.db, this.index, this.geostore)
 }
 
 // OsmElement -> Error
