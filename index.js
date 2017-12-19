@@ -164,12 +164,14 @@ Osm.prototype.query = function (bbox, opts, cb) {
   if (err) return end(err)
 
   // TODO(sww): do query work
-  return end()
+  // ...
+
+  if (!cb) return readonly(result)
 
   // Push an element to the stream or callback
+  // TODO(sww): backpressure!
   function push (elm) {
-    if (cb) result.push(elm)
-    else result.push(elm)
+    result.push(elm)
   }
 
   // Terminate the callback/stream; optionally with an error
