@@ -7,7 +7,7 @@ var ram = require('random-access-memory')
 var memdb = require('memdb')
 
 test('incorrect db init', function (t) {
-  t.plan(4)
+  t.plan(3)
 
   try {
     Osm()
@@ -24,15 +24,6 @@ test('incorrect db init', function (t) {
   try {
     Osm({
       p2pdb: P2P(hyper(ram, { valueEncoding: 'json' }))
-    })
-  } catch (e) {
-    t.ok(e instanceof Error)
-  }
-
-  try {
-    Osm({
-      p2pdb: P2P(hyper(ram, { valueEncoding: 'json' })),
-      index: memdb()
     })
   } catch (e) {
     t.ok(e instanceof Error)
