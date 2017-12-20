@@ -165,6 +165,9 @@ Osm.prototype.query = function (bbox, opts, cb) {
 
   // TODO(sww): do query work
   // ...
+  process.nextTick(function () {
+    end()
+  })
 
   if (!cb) return readonly(result)
 
