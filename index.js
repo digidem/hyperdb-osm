@@ -162,29 +162,14 @@ Osm.prototype.query = function (bbox, opts, cb) {
   var err = validateBoundingBox(bbox)
   if (err) return end(err)
 
-  // TODO(sww): do query work
-  // ...
-  process.nextTick(function () {
-    end()
-  })
+  // Convert p2p-db-osm bbox format to grid-point-store format
+  // TODO(noffle): this feels weird; that there are two bbox formats here
+  bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
-  if (!cb) return readonly(result)
-
-  // Push an element to the stream or callback
-  // TODO(sww): backpressure!
-  function push (elm) {
-    result.push(elm)
-  }
-
-  // Terminate the callback/stream; optionally with an error
-  function end (err) {
-    if (cb) {
-      if (err) cb(err)
-      else cb(null, result)
-    } else {
-      if (err) result.emit('error', err)
-      else result.push(null)
-      return readonly(result)
-    }
+  if (cb) {
+    this.geo.geo.query(bbox, cb)
+    return
+  } else {
+    return this.geo.geo.queryStream(bbox)
   }
 }
