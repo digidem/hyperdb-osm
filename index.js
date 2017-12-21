@@ -144,9 +144,8 @@ Osm.prototype.batch = function (ops, cb) {
   this.db.batch(batch, cb)
 }
 
-// TODO: return id or version or both?
 // TODO: return a stream if no cb is given
-// Id -> [Id]
+// Id -> { id, version }
 Osm.prototype.getChanges = function (id, cb) {
   this.changesets.getElements(id, cb)
 }
