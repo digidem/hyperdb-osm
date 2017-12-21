@@ -6,7 +6,7 @@ test('query empty dataset', function (t) {
 
   var db = createDb()
 
-  var bbox = [[-85, 85], [-180, 180]]
+  var bbox = [[-5, 5], [-5, 5]]
 
   db.osm.query(bbox, function (err, elements) {
     t.error(err)
@@ -18,6 +18,48 @@ test('query empty dataset', function (t) {
     t.error(err)
     t.ok(Array.isArray(elements))
     t.equals(elements.length, 0)
+  })
+})
+
+test('query random dataset', function (t) {
+  t.plan(7)
+
+  var db = createDb()
+
+  var bbox = [[-10, 10], [-10, 10]]
+
+  // Generate a batch of random nodes
+  var batch = (new Array(100))
+    .fill(0)
+    .map(function () {
+      return {
+        type: 'node',
+        lat: Math.random() * 10 - 5,
+        lon: Math.random() * 10 - 5
+      }
+    })
+    .map(function (node) {
+      return {
+        type: 'put',
+        value: node
+      }
+    })
+  db.osm.batch(batch, function (err) {
+    t.error(err)
+
+    db.osm.geo.ready(function () {
+      db.osm.query(bbox, function (err, elements) {
+        t.error(err)
+        t.ok(Array.isArray(elements))
+        t.equals(elements.length, 100)
+      })
+
+      collect(db.osm.query(bbox), function (err, elements) {
+        t.error(err)
+        t.ok(Array.isArray(elements))
+        t.equals(elements.length, 100)
+      })
+    })
   })
 })
 
