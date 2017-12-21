@@ -40,6 +40,7 @@ test('changeset: get elements', function (t) {
         t.ifError(err)
         db.osm.getChanges('9', function (err, res) {
           t.ifError(err)
+          res = res.map(function (x) { return x.id })
           var expected = [elm1.id, elm2.id, elm3.id].sort()
           t.equals(res.length, 3)
           t.deepEquals(res, expected)
@@ -89,11 +90,13 @@ test('changeset: multiple changesets', function (t) {
         t.ifError(err)
         db.osm.getChanges('9', function (err, res) {
           t.ifError(err)
+          res = res.map(function (x) { return x.id })
           var expected = [elm1.id, elm2.id].sort()
           t.equals(res.length, 2)
           t.deepEquals(res, expected)
           db.osm.getChanges('21', function (err, res) {
             t.ifError(err)
+            res = res.map(function (x) { return x.id })
             var expected = [elm3.id]
             t.equals(res.length, 1)
             t.deepEquals(res, expected)

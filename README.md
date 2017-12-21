@@ -136,7 +136,16 @@ Elements are returned using the semantics defined by the [OSM API v0.6](https://
 ### db.osm.getChanges(id, cb)
 
 Fetch a list of all OSM elements belonging to the changeset `id`. `cb` is called
-with an array of OSM element versions.
+with an array of objects of the form:
+
+```js
+{
+  id: '...',
+  version: '...'
+}
+```
+
+*TODO: optionally return a readable stream*
 
 ## Deletions
 
