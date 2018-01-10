@@ -95,6 +95,22 @@ Where `hyperdb` is a [hyperdb](https://github.com/mafintosh/hyperdb) instance,
 instance. The order they are given doesn't matter --
 [depj](https://github.com/noffle/depj) sorts it out.
 
+If you just want to use p2p-db-osm and don't care about p2p-db, that's fine too!
+You can get around the dependency management business and make a plain osmdb
+like so:
+
+```js
+var osm = require('p2p-db-osm')
+
+var osmdb = osm.create({
+  hyperdb: hyperdb,
+  leveldb: leveldb,
+  pointstore: pointstore
+})
+
+osmdb.create({type: 'node', ...})  // etc
+```
+
 ### db.osm.create(element, cb)
 
 Create the new OSM element `element` and add it to the database. The resulting
