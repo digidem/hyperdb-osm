@@ -6,12 +6,9 @@ var Geo = require('grid-point-store')
 var memdb = require('memdb')
 
 module.exports = function () {
-  var db = P2P(hyper(ram, { valueEncoding: 'json' }))
-  var geo = Geo(memdb())
-  db.install('osm', Osm({
-    p2pdb: db,
-    geo: geo,
-    index: memdb()
-  }))
+  var hyperdb = P2P.provide('hyperdb', hyper(ram, { valueEncoding: 'json' }))
+  var leveldb = P2P.provide('leveldb', memdb())
+  var pointstore = P2P.provide('pointstore', Geo(memdb()))
+  var db = P2P([hyperdb, leveldb, pointstore, Osm])
   return db
 }

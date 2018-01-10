@@ -7,23 +7,19 @@
 
 ```js
 var P2P = require('p2p-db')
-var Osm = require('p2p-db-osm')
+var osm = require('p2p-db-osm')
 var hyperdb = require('hyperdb')
 var ram = require('random-access-memory')
 var memdb = require('memdb')
+var Geo = require('grid-point-store')
 
-// Create a fresh hyperdb and p2p-db
-var hyper = hyperdb(ram, { valueEncoding: 'json' })
-var db = P2P(hyper)
+// Create p2p-db and p2p-db-osm dependencies
+var hyperdb = P2P.provide('hyperdb', hyperdb(ram, { valueEncoding: 'json' }))
+var leveldb = P2P.provide('leveldb', memdb())
+var pointstore = P2P.provide('pointstore', Geo(memdb()))
 
-// Create the p2p-db-osm API
-var osm = Osm({
-  p2pdb: db,
-  index: memdb()
-})
-
-// Plug the OSM API into the p2p-db
-db.install('osm', osm)
+// Create the p2p-db
+var db = P2P([hyperdb, leveldb, pointstore, osm])
 
 var node = {
   type: 'node',
@@ -60,17 +56,44 @@ got elements at 78d06921416fe95b
 ## API
 
 ```js
-var Osm = require('p2p-db-osm')
+var osm = require('p2p-db-osm')
 ```
 
-### db.install('osm', new Osm(opts))
+Returns a [depj](https://github.com/noffle/depj) dependency object, which is no
+more than
 
-Install the API into the [p2p-db](p2p-db) `db` under the name `"osm"`.
+```js
+module.exports = {
+  gives: 'osm',
+  needs: ['hyperdb', 'leveldb', 'pointstore'],
+  create: function (api) {
+    return new Osm(api)
+  }
+}
+```
 
-Valid `opts` include:
+This is passed as a dependency directly into the
+[p2p-db](https://github.com/noffle/p2p-db) constructor. See p2p-db for more
+details on how this works.
 
-- `p2pdb` (required): a p2p-db instance
-- `index` (required): a [LevelUP](https://github.com/level/levelup) instance. There are [many](https://github.com/Level/levelup/wiki/Modules#storage) different storage backends to choose from. Various OSM indexes (changeset lookups, nodes referenced by ways/relations, node geo index) store their data here.
+You create a new p2p-db with p2p-db-osm like so:
+
+```js
+var P2P = require('p2p-db')
+
+var db = P2P([
+  P2P.provide('hyperdb', hyperdb),
+  P2P.provide('leveldb', leveldb),
+  P2P.provide('pointstore', pointstore),
+  require('p2p-db-osm')
+])
+```
+
+Where `hyperdb` is a [hyperdb](https://github.com/mafintosh/hyperdb) instance,
+`leveldb` is a [levelup](https://github.com/level/levelup) instance, and
+`pointstore` is a [grid-point-store](https://github.com/noffle/grid-point-store)
+instance. The order they are given doesn't matter --
+[depj](https://github.com/noffle/depj) sorts it out.
 
 ### db.osm.create(element, cb)
 

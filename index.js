@@ -11,19 +11,26 @@ var validateBoundingBox = require('./lib/utils').validateBoundingBox
 var createChangesetsIndex = require('./lib/changesets-index')
 var createGeoIndex = require('./lib/geo-index')
 
-function Osm (opts) {
-  if (!(this instanceof Osm)) return new Osm(opts)
-  if (!opts) throw new Error('missing param "opts"')
-  if (!opts.p2pdb) throw new Error('missing param "opts.p2pdb"')
-  if (!opts.index) throw new Error('missing param "opts.index"')
+module.exports = {
+  gives: 'osm',
+  needs: ['hyperdb', 'leveldb', 'pointstore'],
+  create: function (api) {
+    return new Osm(api)
+  }
+}
 
-  this.p2pdb = opts.p2pdb
-  this.db = this.p2pdb.hyper
-  this.index = opts.index
-  this.dbPrefix = opts.prefix || '/osm'
+function Osm (api) {
+  if (!(this instanceof Osm)) return new Osm(api)
+  if (!api) throw new Error('missing param "api"')
+
+  this.db = api.hyperdb
+  this.index = api.leveldb
+  this.dbPrefix = '/osm'
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
+
+  // TODO: use 'pointstore' dep for this
   this.geo = createGeoIndex(this.db, sub(this.index, 'geo'))
 }
 
