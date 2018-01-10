@@ -30,7 +30,7 @@
     "collect-stream": "^1.2.1",
     "comparable-storable-types": "^1.0.0",
     "depj": "^1.0.1",
-    "hyperdb-index": "^2.0.0",
+    "hyperdb-index": "^2.0.1",
     "hyperdb-index-level": "^2.0.0",
     "randombytes": "^2.0.5",
     "read-only-stream": "^2.0.0",

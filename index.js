@@ -153,7 +153,10 @@ Osm.prototype.batch = function (ops, cb) {
 // TODO: return a stream if no cb is given
 // Id -> { id, version }
 Osm.prototype.getChanges = function (id, cb) {
-  this.changesets.getElements(id, cb)
+  var self = this
+  this.changesets.ready(function () {
+    self.changesets.getElements(id, cb)
+  })
 }
 
 // BoundingBox, Opts -> (Stream or Callback)
@@ -172,10 +175,17 @@ Osm.prototype.query = function (bbox, opts, cb) {
   // TODO(noffle): this feels weird; that there are two bbox formats here
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
+  var self = this
   if (cb) {
-    this.geo.geo.query(bbox, cb)
+    this.geo.ready(function () {
+      self.geo.geo.query(bbox, cb)
+    })
     return
   } else {
-    return this.geo.geo.queryStream(bbox)
+    var t = through.obj()
+    this.geo.ready(function () {
+      self.geo.geo.queryStream(bbox).pipe(t)
+    })
+    return readonly(t)
   }
 }
