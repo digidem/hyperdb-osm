@@ -25,13 +25,12 @@ function Osm (api) {
 
   this.db = api.hyperdb
   this.index = api.leveldb
+  this.geo = api.pointstore
   this.dbPrefix = '/osm'
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
-
-  // TODO: use 'pointstore' dep for this
-  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'))
+  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), this.geo)
 }
 
 // OsmElement -> Error
