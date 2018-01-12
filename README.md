@@ -170,7 +170,11 @@ but the stream will emit results as they arrive, resulting in much less
 buffering. This can make a large impact on memory use for queries on large
 datasets.
 
-Elements are returned using the semantics defined by the [OSM API v0.6](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_.2Fapi.2F0.6.2Fmap).
+The following [algorithm](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_.2Fapi.2F0.6.2Fmap) is used to determine what OSM elements are returned:
+
+1. All nodes that are inside a given bounding box and any relations that reference them.
+2. All ways that reference at least one node that is inside a given bounding box, any relations that reference them (the ways), and any nodes outside the bounding box that the ways may reference.
+3. All relations that reference one of the nodes, ways or relations included due to the above rules. (This does not apply recursively; meaning that elements referenced by a relation are not returned by virtue of being in that relation.)
 
 ### db.osm.getChanges(id, cb)
 
