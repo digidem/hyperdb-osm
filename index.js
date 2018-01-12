@@ -4,6 +4,7 @@ var through = require('through2')
 var readonly = require('read-only-stream')
 var bs58 = require('bs58')
 var sub = require('subleveldown')
+var collect = require('collect-stream')
 var utils = require('./lib/utils')
 
 var checkElement = require('./lib/check-element')
@@ -175,17 +176,15 @@ Osm.prototype.query = function (bbox, opts, cb) {
   // TODO(noffle): this feels weird; that there are two bbox formats here
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
+  var t = through.obj()
   var self = this
-  if (cb) {
-    this.geo.ready(function () {
-      self.geo.geo.query(bbox, cb)
-    })
-    return
-  } else {
-    var t = through.obj()
-    this.geo.ready(function () {
-      self.geo.geo.queryStream(bbox).pipe(t)
-    })
+  this.geo.ready(function () {
+    self.geo.geo.queryStream(bbox).pipe(t)
+  })
+
+  if (!cb) {
     return readonly(t)
+  } else {
+    collect(t, {encoding: 'object'}, cb)
   }
 }
