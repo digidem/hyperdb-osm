@@ -176,10 +176,10 @@ Osm.prototype.query = function (bbox, cb) {
   }
 
   // Convert p2p-db-osm bbox format to grid-point-store format
-  // TODO(noffle): this feels weird; that there are two bbox formats here
+  // TODO(noffle): unify the bbox formats!
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
-  var t = through.obj(onNode)
+  var t = through.obj(onPoint)
   var self = this
   this.geo.ready(function () {
     self.geo.geo.queryStream(bbox).pipe(t)
@@ -191,7 +191,10 @@ Osm.prototype.query = function (bbox, cb) {
     collect(t, {encoding: 'object'}, cb)
   }
 
-  function onNode (node, _, next) {
-    next(null, node)
+  function onPoint (point, _, next) {
+    var version = bs58.encode(point.value)
+    self.getByVersion(version, function (err, elm) {
+      next(err, elm)
+    })
   }
 }
