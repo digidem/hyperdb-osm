@@ -1,6 +1,42 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
 
+test('no bbox', function (t) {
+  t.plan(4)
+
+  var db = createDb()
+
+  var bbox = null
+
+  db.osm.query(bbox, function (err, elements) {
+    t.ok(err instanceof Error)
+    t.equals(elements, undefined)
+  })
+
+  collect(db.osm.query(bbox), function (err, elements) {
+    t.ok(err instanceof Error)
+    t.equals(elements, undefined)
+  })
+})
+
+test('bad bbox', function (t) {
+  t.plan(4)
+
+  var db = createDb()
+
+  var bbox = [[5, -5], [-5, 5]]
+
+  db.osm.query(bbox, function (err, elements) {
+    t.ok(err instanceof Error)
+    t.equals(elements, undefined)
+  })
+
+  collect(db.osm.query(bbox), function (err, elements) {
+    t.ok(err instanceof Error)
+    t.equals(elements, undefined)
+  })
+})
+
 test('query empty dataset', function (t) {
   t.plan(6)
 
@@ -47,18 +83,16 @@ test('query random dataset', function (t) {
   db.osm.batch(batch, function (err) {
     t.error(err)
 
-    db.osm.geo.ready(function () {
-      db.osm.query(bbox, function (err, elements) {
-        t.error(err)
-        t.ok(Array.isArray(elements))
-        t.equals(elements.length, 100)
-      })
+    db.osm.query(bbox, function (err, elements) {
+      t.error(err)
+      t.ok(Array.isArray(elements))
+      t.equals(elements.length, 100)
+    })
 
-      collect(db.osm.query(bbox), function (err, elements) {
-        t.error(err)
-        t.ok(Array.isArray(elements))
-        t.equals(elements.length, 100)
-      })
+    collect(db.osm.query(bbox), function (err, elements) {
+      t.error(err)
+      t.ok(Array.isArray(elements))
+      t.equals(elements.length, 100)
     })
   })
 })

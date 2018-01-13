@@ -160,23 +160,26 @@ Osm.prototype.getChanges = function (id, cb) {
   })
 }
 
-// BoundingBox, Opts -> (Stream or Callback)
-Osm.prototype.query = function (bbox, opts, cb) {
-  if (typeof opts === 'function') {
-    cb = opts
-    opts = {}
-  }
-  if (!opts) opts = {}
+// BoundingBox -> (Stream or Callback)
+Osm.prototype.query = function (bbox, cb) {
   var result = cb ? [] : through()
 
   var err = validateBoundingBox(bbox)
-  if (err) return end(err)
+  if (err) {
+    if (cb) {
+      return cb(err)
+    } else {
+      var t = through.obj()
+      process.nextTick(function () { t.emit('error', err) })
+      return t
+    }
+  }
 
   // Convert p2p-db-osm bbox format to grid-point-store format
   // TODO(noffle): this feels weird; that there are two bbox formats here
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
-  var t = through.obj()
+  var t = through.obj(onNode)
   var self = this
   this.geo.ready(function () {
     self.geo.geo.queryStream(bbox).pipe(t)
@@ -186,5 +189,9 @@ Osm.prototype.query = function (bbox, opts, cb) {
     return readonly(t)
   } else {
     collect(t, {encoding: 'object'}, cb)
+  }
+
+  function onNode (node, _, next) {
+    next(null, node)
   }
 }
