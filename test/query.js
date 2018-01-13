@@ -1,5 +1,6 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
+var queryTest = require('./lib/query-test')
 
 test('no bbox', function (t) {
   t.plan(4)
@@ -94,6 +95,42 @@ test('query random dataset', function (t) {
       t.ok(Array.isArray(elements))
       t.equals(elements.length, 100)
     })
+  })
+})
+
+test('relations on bbox nodes', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'relation',
+      id: 'C',
+      members: [
+        { type: 'node',
+          id: 'A' }
+      ] },
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C' ]
+    },
+    {
+      bbox: [[-10, 0], [-10, 0]],
+      expected: [ 'A', 'C' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    t.end()
   })
 })
 
