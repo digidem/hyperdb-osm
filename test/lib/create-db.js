@@ -8,7 +8,7 @@ var memdb = require('memdb')
 module.exports = function () {
   var hyperdb = P2P.provide('hyperdb', hyper(ram, { valueEncoding: 'json' }))
   var leveldb = P2P.provide('leveldb', memdb())
-  var pointstore = P2P.provide('pointstore', Geo(memdb()))
+  var pointstore = P2P.provide('pointstore', Geo(memdb(), {zoomLevel: 10}))
   var db = P2P([hyperdb, leveldb, pointstore, Osm])
   return db
 }
