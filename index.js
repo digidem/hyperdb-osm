@@ -55,10 +55,11 @@ Osm.prototype.create = function (element, cb) {
     var w = self.db._localWriter
     w.head(function (err, node) {
       if (err) return cb(err)
-      var version = utils.encodeVersion(w.key, node.seq)
+
+      // TODO(noffle): need hyperdb to return the 'node' that was created
       var elm = Object.assign({}, element)
       elm.id = id
-      elm.version = bs58.encode(version)
+      elm.version = utils.versionFromKeySeq(w.key, node.seq)
       cb(null, elm)
     })
   })
@@ -76,7 +77,7 @@ Osm.prototype.get = function (id, cb) {
     cb(null, res.map(function (node) {
       var v = node.value
       v.id = id
-      v.version = bs58.encode(utils.nodeToVersion(self.db, node))
+      v.version = utils.nodeToVersion(self.db, node)
       return v
     }))
   })
@@ -84,8 +85,7 @@ Osm.prototype.get = function (id, cb) {
 
 // OsmVersion -> OsmElement
 Osm.prototype.getByVersion = function (osmVersion, cb) {
-  var version = bs58.decode(osmVersion)
-  utils.versionToNode(this.db, version, function (err, node) {
+  utils.versionToNode(this.db, osmVersion, function (err, node) {
     if (err) return cb(err)
     var elm = Object.assign({
       id: utils.hyperDbKeyToId(node.key),
@@ -123,13 +123,14 @@ Osm.prototype.put = function (id, element, cb) {
     console.log('updating', key, '->', element)
     self.db.put(key, element, function (err) {
       if (err) return cb(err)
+
+      // TODO(noffle): need hyperdb to return the 'node' that was created
       var w = self.db._localWriter
       w.head(function (err, node) {
         if (err) return cb(err)
-        var version = utils.encodeVersion(w.key, node.seq)
         var elm = Object.assign({}, element)
         elm.id = id
-        elm.version = bs58.encode(version)
+        elm.version = utils.versionFromKeySeq(w.key, node.seq)
         cb(null, elm)
       })
     })
