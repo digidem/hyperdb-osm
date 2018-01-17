@@ -134,6 +134,39 @@ test('relations on bbox nodes', function (t) {
   })
 })
 
+test('basic way', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'way',
+      id: 'C',
+      refs: [ 'A', 'B' ] }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C' ]
+    },
+    {
+      bbox: [[-10, 0], [-10, 0]],
+      expected: [ 'A', 'C' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    t.end()
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
