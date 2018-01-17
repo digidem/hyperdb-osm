@@ -1,5 +1,6 @@
 module.exports = Osm
 
+var async = require('async')
 var through = require('through2')
 var readonly = require('read-only-stream')
 var bs58 = require('bs58')
@@ -11,6 +12,7 @@ var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
 var createChangesetsIndex = require('./lib/changesets-index')
 var createGeoIndex = require('./lib/geo-index')
+var createRefsIndex = require('./lib/refs-index')
 
 module.exports = {
   gives: 'osm',
@@ -31,6 +33,7 @@ function Osm (api) {
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
+  this.refs = createRefsIndex(this.db, this.index)
   this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), this.geo)
 }
 
@@ -180,8 +183,8 @@ Osm.prototype.query = function (bbox, cb) {
   // TODO(noffle): unify the bbox formats!
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
-  var t = through.obj(onPoint)
   var self = this
+  var t = through.obj(onPoint)
   this.geo.ready(function () {
     self.geo.geo.queryStream(bbox).pipe(t)
   })
@@ -195,7 +198,23 @@ Osm.prototype.query = function (bbox, cb) {
   function onPoint (point, _, next) {
     var version = bs58.encode(point.value)
     self.getByVersion(version, function (err, elm) {
-      next(err, elm)
+      if (err) return next(err)
+      t.push(elm)
+
+      // get refs
+      self.refs.getReferersById(elm.id, function (err, refs) {
+        if (err) return next(err)
+        if (!refs.length) return next()
+
+        async.forEach(refs, function onRef (ref, cb) {
+          console.log('ref', ref)
+          self.get(ref.id, function (err, elms) {
+            if (err) return cb(err)
+            elms.forEach(function (elm) { t.push(elm) })
+            cb()
+          })
+        }, next)
+      })
     })
   }
 }
