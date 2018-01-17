@@ -166,7 +166,7 @@ Osm.prototype.getChanges = function (id, cb) {
 
 // BoundingBox -> (Stream or Callback)
 Osm.prototype.query = function (bbox, cb) {
-  var result = cb ? [] : through()
+  var seen = {}
 
   var err = validateBoundingBox(bbox)
   if (err) {
@@ -195,11 +195,18 @@ Osm.prototype.query = function (bbox, cb) {
     collect(t, {encoding: 'object'}, cb)
   }
 
+  function add (elm) {
+    if (!seen[elm.version]) {
+      seen[elm.version] = true
+      t.push(elm)
+    }
+  }
+
   function onPoint (point, _, next) {
     var version = bs58.encode(point.value)
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
-      t.push(elm)
+      add(elm)
 
       // get refs
       self.refs.getReferersById(elm.id, function (err, refs) {
@@ -210,7 +217,7 @@ Osm.prototype.query = function (bbox, cb) {
           console.log('ref', ref)
           self.get(ref.id, function (err, elms) {
             if (err) return cb(err)
-            elms.forEach(function (elm) { t.push(elm) })
+            elms.forEach(function (elm) { add(elm) })
             cb()
           })
         }, next)
