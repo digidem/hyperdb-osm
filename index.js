@@ -233,6 +233,8 @@ Osm.prototype.query = function (bbox, cb) {
     })
   }
 
+  // Get all head versions of all ways and relations referring to an element,
+  // *plus* all relations referring to those elements.
   function getWaysAndRelationReferrers (elm, cb) {
     getRefererElements(elm, function (err, elms) {
       if (err) return cb(err)
@@ -260,6 +262,7 @@ Osm.prototype.query = function (bbox, cb) {
     })
   }
 
+  // Get all head versions of all ways and relations referring to an element.
   function getRefererElements (elm, cb) {
     self.refs.getReferersById(elm.id, function (err, refs) {
       if (err) return cb(err)
@@ -277,6 +280,7 @@ Osm.prototype.query = function (bbox, cb) {
     })
   }
 
+  // Get all head versions of the nodes in a way.
   function getWayRefElements (elm, cb) {
     async.reduce(elm.refs, [], reducer, cb)
 
