@@ -134,7 +134,7 @@ test('relations on bbox nodes', function (t) {
   })
 })
 
-test('basic way', function (t) {
+test('way contained in bbox', function (t) {
   var db = createDb()
 
   var data = [
@@ -155,10 +155,43 @@ test('basic way', function (t) {
     {
       bbox: [[-10, 10], [-10, 10]],
       expected: [ 'A', 'B', 'C' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    t.end()
+  })
+})
+
+test('way partially in bbox', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '5',
+      lon: '5' },
+    { type: 'way',
+      id: 'D',
+      refs: [ 'A', 'B', 'C' ] }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C', 'D' ]
     },
     {
       bbox: [[-10, 0], [-10, 0]],
-      expected: [ 'A', 'C' ]
+      expected: [ 'A', 'B', 'C', 'D' ]
     }
   ]
 
