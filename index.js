@@ -210,20 +210,61 @@ Osm.prototype.query = function (bbox, cb) {
       if (err) return next(err)
       add(elm)
 
-      // get refs
-      self.refs.getReferersById(elm.id, function (err, refs) {
+      getWaysAndRelationReferrers(elm, function (err, elms) {
         if (err) return next(err)
-        if (!refs.length) return next()
-
-        async.forEach(refs, function onRef (ref, cb) {
-          console.log('ref', ref)
-          self.get(ref.id, function (err, elms) {
-            if (err) return cb(err)
-            elms.forEach(function (elm) { add(elm) })
-            cb()
-          })
-        }, next)
+        elms.forEach(add)
+        next()
       })
     })
   }
+
+  function getWaysAndRelationReferrers (elm, cb) {
+    getRefererElements(elm, function (err, elms) {
+      if (err) return cb(err)
+
+      async.reduce(elms, [], reducer, cb)
+
+      function reducer (accum, elm, cb) {
+        accum.push(elm)
+        if (elm.type === 'way') {
+          getWayRefElements(elm, function (err, res) {
+            accum.push.apply(accum, res)
+            cb(null, accum)
+          })
+        } else {
+          cb(null, accum)
+        }
+      }
+    })
+  }
+
+  function getRefererElements (elm, cb) {
+    self.refs.getReferersById(elm.id, function (err, refs) {
+      if (err) return cb(err)
+
+      var refIds = refs.map(function (ref) { return ref.id })
+      async.reduce(refIds, [], reducer, cb)
+
+      function reducer (accum, id, cb) {
+        self.get(id, function (err, elms) {
+          if (err) return cb(err)
+          accum.push.apply(accum, elms)
+          cb(null, accum)
+        })
+      }
+    })
+  }
+
+  function getWayRefElements (elm, cb) {
+    async.reduce(elm.refs, [], reducer, cb)
+
+    function reducer (accum, id, cb) {
+      self.get(id, function (err, elms) {
+        if (err) return cb(err)
+        accum.push.apply(accum, elms)
+        cb(null, accum)
+      })
+    }
+  }
 }
+
