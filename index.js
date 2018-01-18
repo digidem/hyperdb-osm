@@ -3,7 +3,6 @@ module.exports = Osm
 var async = require('async')
 var through = require('through2')
 var readonly = require('read-only-stream')
-var bs58 = require('bs58')
 var sub = require('subleveldown')
 var collect = require('collect-stream')
 var utils = require('./lib/utils')
@@ -167,13 +166,14 @@ Osm.prototype.getChanges = function (id, cb) {
 // BoundingBox -> (Stream or Callback)
 Osm.prototype.query = function (bbox, cb) {
   var seen = {}
+  var t
 
   var err = validateBoundingBox(bbox)
   if (err) {
     if (cb) {
       return cb(err)
     } else {
-      var t = through.obj()
+      t = through.obj()
       process.nextTick(function () { t.emit('error', err) })
       return t
     }
@@ -184,7 +184,7 @@ Osm.prototype.query = function (bbox, cb) {
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
   var self = this
-  var t = through.obj(onPoint)
+  t = through.obj(onPoint)
   this.geo.ready(function () {
     self.refs.ready(function () {
       self.geo.queryStream(bbox).pipe(t)
