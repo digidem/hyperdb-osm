@@ -152,7 +152,7 @@ test('ways', function (t) {
       lon: '5' },
     { type: 'way',
       id: 'D',
-      refs: [ 'A', 'B', 'C' ] }
+      refs: [ 'A', 'B', 'C' ] },
   ]
 
   var queries = [
@@ -163,6 +163,58 @@ test('ways', function (t) {
     {
       bbox: [[-10, 0], [-10, 0]],
       expected: [ 'A', 'B', 'C', 'D' ]
+    },
+    {
+      bbox: [[-10, -10], [-10, -10]],
+      expected: []
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    t.end()
+  })
+})
+
+test('relations on ways and nodes', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '5',
+      lon: '5' },
+    { type: 'way',
+      id: 'D',
+      refs: [ 'A', 'B', 'C' ] },
+    { type: 'relation',
+      id: 'E',
+      members: [
+        { type: 'node',
+          id: 'B',
+          role: 'foo' },
+        { type: 'way',
+          id: 'D',
+          role: 'bar' },
+      ]
+    }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C', 'D', 'E' ]
+    },
+    {
+      bbox: [[-10, 0], [-10, 0]],
+      expected: [ 'A', 'B', 'C', 'D', 'E' ]
     },
     {
       bbox: [[-10, -10], [-10, -10]],

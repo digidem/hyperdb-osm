@@ -218,6 +218,21 @@ Osm.prototype.query = function (bbox, cb) {
     })
   }
 
+  function getRelationReferrers (elm, cb) {
+    getRefererElements(elm, function (err, elms) {
+      if (err) return cb(err)
+
+      async.reduce(elms, [], reducer, cb)
+
+      function reducer (accum, elm, cb) {
+        if (elm.type === 'relation') {
+          accum.push(elm)
+        }
+        cb(null, accum)
+      }
+    })
+  }
+
   function getWaysAndRelationReferrers (elm, cb) {
     getRefererElements(elm, function (err, elms) {
       if (err) return cb(err)
@@ -226,14 +241,21 @@ Osm.prototype.query = function (bbox, cb) {
 
       function reducer (accum, elm, cb) {
         accum.push(elm)
-        if (elm.type === 'way') {
-          getWayRefElements(elm, function (err, res) {
-            accum.push.apply(accum, res)
+        getRelationReferrers(elm, function (err, res) {
+          if (err) return cb(err)
+
+          accum.push.apply(accum, res)
+
+          if (elm.type === 'way') {
+            getWayRefElements(elm, function (err, res) {
+              if (err) return cb(err)
+              accum.push.apply(accum, res)
+              cb(null, accum)
+            })
+          } else {
             cb(null, accum)
-          })
-        } else {
-          cb(null, accum)
-        }
+          }
+        })
       }
     })
   }
