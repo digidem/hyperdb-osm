@@ -186,7 +186,9 @@ Osm.prototype.query = function (bbox, cb) {
   var self = this
   var t = through.obj(onPoint)
   this.geo.ready(function () {
-    self.geo.geo.queryStream(bbox).pipe(t)
+    self.refs.ready(function () {
+      self.geo.queryStream(bbox).pipe(t)
+    })
   })
 
   if (!cb) {
@@ -202,8 +204,8 @@ Osm.prototype.query = function (bbox, cb) {
     }
   }
 
-  function onPoint (point, _, next) {
-    var version = bs58.encode(point.value)
+  function onPoint (version, _, next) {
+    console.log('onPoint', version)
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
       add(elm)
