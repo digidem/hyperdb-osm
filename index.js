@@ -208,13 +208,48 @@ Osm.prototype.query = function (bbox, cb) {
     console.log('onPoint', version)
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
-      add(elm)
 
-      getWaysAndRelationReferrers(elm, function (err, elms) {
-        if (err) return next(err)
-        elms.forEach(add)
-        next()
-      })
+      var root = {
+        elm: elm,
+        expand: [expandWayReferers, expandRelationReferers]
+      }
+      return work([root])
+
+      // async recursive work loop
+      function work (stack) {
+        // console.log('stack', stack.map(function (op) { return op.elm.id }))
+        // Add all elements to the result
+        stack.forEach(function (op) {
+          console.log('adding', op.elm.id, op.expand)
+          add(op.elm)
+        })
+
+        async.reduce(stack, [], reducer, function (err, res) {
+          if (err) return next(err)
+          if (!res.length) return next()
+
+          // Recurse with the new ops
+          work(res)
+        })
+      }
+
+      // Reduce an op by running its expand functions
+      function reducer (accum, op, cb) {
+        async.reduce(op.expand, [], innerReducer, function (err, res) {
+          if (err) return cb(err)
+          accum.push.apply(accum, res)
+          cb(null, accum)
+        })
+
+        // Reduce an op with a single expand function
+        function innerReducer (accum, expandFn, cb) {
+          expandFn(op.elm, function (err, ops) {
+            if (err) return cb(err)
+            accum.push.apply(accum, ops)
+            cb(null, accum)
+          })
+        }
+      }
     })
   }
 
@@ -229,35 +264,6 @@ Osm.prototype.query = function (bbox, cb) {
           accum.push(elm)
         }
         cb(null, accum)
-      }
-    })
-  }
-
-  // Get all head versions of all ways and relations referring to an element,
-  // *plus* all relations referring to those elements.
-  function getWaysAndRelationReferrers (elm, cb) {
-    getRefererElements(elm, function (err, elms) {
-      if (err) return cb(err)
-
-      async.reduce(elms, [], reducer, cb)
-
-      function reducer (accum, elm, cb) {
-        accum.push(elm)
-        getRelationReferrers(elm, function (err, res) {
-          if (err) return cb(err)
-
-          accum.push.apply(accum, res)
-
-          if (elm.type === 'way') {
-            getWayRefElements(elm, function (err, res) {
-              if (err) return cb(err)
-              accum.push.apply(accum, res)
-              cb(null, accum)
-            })
-          } else {
-            cb(null, accum)
-          }
-        })
       }
     })
   }
@@ -280,17 +286,87 @@ Osm.prototype.query = function (bbox, cb) {
     })
   }
 
-  // Get all head versions of the nodes in a way.
-  function getWayRefElements (elm, cb) {
+  // ----------------------------------------------------------------
+  // Expansion functions for queried elements.
+  // ----------------------------------------------------------------
+
+  // Get all ways referring to this element.
+  function expandWayReferers (elm, cb) {
+    getRefererElements(elm, function (err, elms) {
+      if (err) return cb(err)
+
+      var res = elms
+        .filter(function (elm) { return elm.type === 'way' })
+        .map(function (elm) {
+          return {
+            elm: elm,
+            expand: [expandAllHeadVersions, expandRelationReferers]
+          }
+        })
+      cb(null, res)
+    })
+  }
+
+  // Recursively expand to all relations referring to this element.
+  function expandRelationReferers (elm, cb) {
+    getRelationReferrers(elm, function (err, elms) {
+      if (err) return cb(err)
+
+      var res = elms
+        .map(function (elm) {
+          return {
+            elm: elm,
+            expand: [expandRelationReferers]
+          }
+        })
+      cb(null, res)
+    })
+  }
+
+  // Expands to all head versions of the element.
+  function expandAllHeadVersions (elm, cb) {
+    self.get(elm.id, function (err, elms) {
+      if (err) return cb(err)
+
+      var res = elms
+        .map(function (elm) {
+          if (elm.type === 'way') {
+            return {
+              elm: elm,
+              expand: [expandWayNodes]
+            }
+          } else if (elm.type === 'node') {
+            return {
+              elm: elm,
+              expand: [expandRelationReferers]
+            }
+          }
+        })
+      cb(null, res)
+    })
+  }
+
+  // Expands to all nodes in a way.
+  //
+  // TODO: this could be more efficient if relations were expanded only on ONE
+  // id from the set of heads of a node
+  function expandWayNodes (elm, cb) {
     async.reduce(elm.refs, [], reducer, cb)
 
     function reducer (accum, id, cb) {
       self.get(id, function (err, elms) {
         if (err) return cb(err)
-        accum.push.apply(accum, elms)
+
+        var res = elms
+          .map(function (elm) {
+            return {
+              elm: elm,
+              expand: [expandRelationReferers]
+            }
+          })
+        accum.push.apply(accum, res)
         cb(null, accum)
       })
     }
   }
 }
-
