@@ -184,7 +184,7 @@ Osm.prototype.query = function (bbox, cb) {
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[1][1], bbox[1][1]]]
 
   var self = this
-  t = through.obj(onPoint)
+  t = through.obj(onPoint, onFlush)
   this.geo.ready(function () {
     self.refs.ready(function () {
       self.geo.queryStream(bbox).pipe(t)
@@ -195,6 +195,60 @@ Osm.prototype.query = function (bbox, cb) {
     return readonly(t)
   } else {
     collect(t, {encoding: 'object'}, cb)
+  }
+
+  var workDoneCb
+  function areWeDone (cb) {
+    workDoneCb = cb
+  }
+
+  var stack = []
+  // async recursive work loop
+  var working = false
+  function work () {
+    if (working) return
+    working = true
+    // for(var i=0; i < stack.length; i++) process.stdout.write('.')
+    // console.log('stack', stack.map(function (op) { return op.elm.id }))
+    // Add all elements to the result
+    stack.forEach(function (op) {
+      // console.log('adding', op.elm.id, op.expand)
+      add(op.elm)
+    })
+
+    async.reduce(stack, [], reducer, function (err, res) {
+      if (err) {
+        t.emit('error', err)
+        return
+      }
+      if (!res.length) {
+        working = false
+        if (workDoneCb) workDoneCb()
+        return
+      }
+
+      // Recurse with the new ops
+      work()
+    })
+
+    // Reduce an op by running its expand functions
+    function reducer (accum, op, cb) {
+      async.reduce(op.expand, [], innerReducer, function (err, res) {
+        if (err) return cb(err)
+        accum.push.apply(accum, res)
+        // process.stdout.write('x')
+        cb(null, accum)
+      })
+
+      // Reduce an op with a single expand function
+      function innerReducer (accum, expandFn, cb) {
+        expandFn(op.elm, function (err, ops) {
+          if (err) return cb(err)
+          accum.push.apply(accum, ops)
+          cb(null, accum)
+        })
+      }
+    }
   }
 
   function add (elm) {
@@ -213,44 +267,16 @@ Osm.prototype.query = function (bbox, cb) {
         elm: elm,
         expand: [expandWayReferers, expandRelationReferers]
       }
-      return work([root])
-
-      // async recursive work loop
-      function work (stack) {
-        // console.log('stack', stack.map(function (op) { return op.elm.id }))
-        // Add all elements to the result
-        stack.forEach(function (op) {
-          console.log('adding', op.elm.id, op.expand)
-          add(op.elm)
-        })
-
-        async.reduce(stack, [], reducer, function (err, res) {
-          if (err) return next(err)
-          if (!res.length) return next()
-
-          // Recurse with the new ops
-          work(res)
-        })
-      }
-
-      // Reduce an op by running its expand functions
-      function reducer (accum, op, cb) {
-        async.reduce(op.expand, [], innerReducer, function (err, res) {
-          if (err) return cb(err)
-          accum.push.apply(accum, res)
-          cb(null, accum)
-        })
-
-        // Reduce an op with a single expand function
-        function innerReducer (accum, expandFn, cb) {
-          expandFn(op.elm, function (err, ops) {
-            if (err) return cb(err)
-            accum.push.apply(accum, ops)
-            cb(null, accum)
-          })
-        }
-      }
+      // process.stdout.write('+')
+      stack.push(root)
+      work()
+      next()
     })
+  }
+
+  function onFlush (cb) {
+    if (working) areWeDone(cb)
+    else cb()
   }
 
   function getRelationReferrers (elm, cb) {
