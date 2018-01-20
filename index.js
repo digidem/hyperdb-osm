@@ -51,7 +51,7 @@ Osm.prototype.create = function (element, cb) {
 
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
-  console.log('creating', key, '->', element)
+  // console.log('creating', key, '->', element)
   this.db.put(key, element, function (err) {
     if (err) return cb(err)
     var w = self.db._localWriter
@@ -122,7 +122,7 @@ Osm.prototype.put = function (id, element, cb) {
 
     // Write to hyperdb
     var key = self.dbPrefix + '/elements/' + id
-    console.log('updating', key, '->', element)
+    // console.log('updating', key, '->', element)
     self.db.put(key, element, function (err) {
       if (err) return cb(err)
 
@@ -208,7 +208,6 @@ Osm.prototype.query = function (bbox, cb) {
   function work () {
     if (working) return
     working = true
-    // for(var i=0; i < stack.length; i++) process.stdout.write('.')
     // console.log('stack', stack.map(function (op) { return op.elm.id }))
     // Add all elements to the result
     stack.forEach(function (op) {
@@ -236,7 +235,6 @@ Osm.prototype.query = function (bbox, cb) {
       async.reduce(op.expand, [], innerReducer, function (err, res) {
         if (err) return cb(err)
         accum.push.apply(accum, res)
-        // process.stdout.write('x')
         cb(null, accum)
       })
 
@@ -259,7 +257,7 @@ Osm.prototype.query = function (bbox, cb) {
   }
 
   function onPoint (version, _, next) {
-    console.log('onPoint', version)
+    // console.log('onPoint', version)
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
 
@@ -267,7 +265,6 @@ Osm.prototype.query = function (bbox, cb) {
         elm: elm,
         expand: [expandWayReferers, expandRelationReferers]
       }
-      // process.stdout.write('+')
       stack.push(root)
       work()
       next()
