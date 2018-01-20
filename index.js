@@ -202,12 +202,15 @@ Osm.prototype.query = function (bbox, cb) {
     workDoneCb = cb
   }
 
+  var nextStack = []
   var stack = []
   // async recursive work loop
   var working = false
   function work () {
     if (working) return
     working = true
+    stack = nextStack
+    nextStack = []
     // console.log('stack', stack.map(function (op) { return op.elm.id }))
     // Add all elements to the result
     stack.forEach(function (op) {
@@ -220,8 +223,9 @@ Osm.prototype.query = function (bbox, cb) {
         t.emit('error', err)
         return
       }
-      if (!res.length) {
-        working = false
+
+      working = false
+      if (!res.length && !nextStack.length) {
         if (workDoneCb) workDoneCb()
         return
       }
@@ -265,7 +269,7 @@ Osm.prototype.query = function (bbox, cb) {
         elm: elm,
         expand: [expandWayReferers, expandRelationReferers]
       }
-      stack.push(root)
+      nextStack.push(root)
       work()
       next()
     })
