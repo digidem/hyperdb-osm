@@ -27,13 +27,20 @@ function Osm (api) {
 
   this.db = api.hyperdb
   this.index = api.leveldb
-  this.geo = api.pointstore
   this.dbPrefix = '/osm'
 
   // Create indexes
   this.changesets = createChangesetsIndex(this.db, this.index)
   this.refs = createRefsIndex(this.db, this.index)
-  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), this.geo)
+  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), api.pointstore)
+}
+
+Osm.prototype.ready = function (cb) {
+  var funcs = [this.changesets, this.refs, this.geo]
+    .filter(function (idx) { return !!idx })
+    .map(function (idx) { return idx.ready.bind(idx) })
+
+  async.map(funcs, function (fn, cb) { fn(cb) }, cb)
 }
 
 // OsmElement -> Error
