@@ -26,9 +26,9 @@
   ],
   "dependencies": {
     "async": "^2.6.0",
-    "bs58": "^4.0.1",
     "collect-stream": "^1.2.1",
     "comparable-storable-types": "^1.0.0",
+    "d64": "^1.0.0",
     "depj": "^1.0.1",
     "hyperdb-index": "^2.0.1",
     "hyperdb-index-level": "^2.0.0",
