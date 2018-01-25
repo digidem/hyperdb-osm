@@ -173,6 +173,7 @@ Osm.prototype.getChanges = function (id, cb) {
 // BoundingBox -> (Stream or Callback)
 Osm.prototype.query = function (bbox, cb) {
   var seen = {}
+  var processed = {}
   var t
 
   var err = validateBoundingBox(bbox)
@@ -191,7 +192,7 @@ Osm.prototype.query = function (bbox, cb) {
   bbox = [[bbox[0][0], bbox[1][0]], [bbox[0][1], bbox[1][1]]]
 
   var self = this
-  t = through.obj(onPoint, onFlush)
+  t = through.obj(onPoint)
   this.geo.ready(function () {
     self.refs.ready(function () {
       self.geo.queryStream(bbox).pipe(t)
@@ -202,62 +203,6 @@ Osm.prototype.query = function (bbox, cb) {
     return readonly(t)
   } else {
     collect(t, {encoding: 'object'}, cb)
-  }
-
-  var workDoneCb
-  function areWeDone (cb) {
-    workDoneCb = cb
-  }
-
-  var nextStack = []
-  var stack = []
-  // async recursive work loop
-  var working = false
-  function work () {
-    if (working) return
-    working = true
-    stack = nextStack
-    nextStack = []
-    // console.log('stack', stack.map(function (op) { return op.elm.id }))
-    // Add all elements to the result
-    stack.forEach(function (op) {
-      // console.log('adding', op.elm.id, op.expand)
-      add(op.elm)
-    })
-
-    async.reduce(stack, [], reducer, function (err, res) {
-      if (err) {
-        t.emit('error', err)
-        return
-      }
-
-      working = false
-      if (!res.length && !nextStack.length) {
-        if (workDoneCb) workDoneCb()
-        return
-      }
-
-      // Recurse with the new ops
-      work()
-    })
-
-    // Reduce an op by running its expand functions
-    function reducer (accum, op, cb) {
-      async.reduce(op.expand, [], innerReducer, function (err, res) {
-        if (err) return cb(err)
-        accum.push.apply(accum, res)
-        cb(null, accum)
-      })
-
-      // Reduce an op with a single expand function
-      function innerReducer (accum, expandFn, cb) {
-        expandFn(op.elm, function (err, ops) {
-          if (err) return cb(err)
-          accum.push.apply(accum, ops)
-          cb(null, accum)
-        })
-      }
-    }
   }
 
   function add (elm) {
@@ -276,15 +221,48 @@ Osm.prototype.query = function (bbox, cb) {
         elm: elm,
         expand: [expandWayReferers, expandRelationReferers]
       }
-      nextStack.push(root)
-      work()
-      next()
-    })
-  }
 
-  function onFlush (cb) {
-    if (working) areWeDone(cb)
-    else cb()
+      reduceAndCollect([root], next)
+
+      function reduceAndCollect (stack, done) {
+        if (!stack.length) return done()
+
+        stack = stack.filter(function (op) {
+          var key = op.elm.version
+          for (var i=0; i < op.expand.length; i++) {
+            key += op.expand[i].name
+          }
+          add(op.elm)
+          if (!processed[key]) {
+            processed[key] = true
+            return true
+          }
+          return false
+        })
+
+        async.reduce(stack, [], reduceOp, function (err, res) {
+          if (err) return done(err)
+          reduceAndCollect(res, done)
+        })
+
+        // Reduce an op with a single expand function
+        function reduceOp (accum, op, cb) {
+          async.reduce(op.expand, [], expand, function (err, res) {
+            if (err) return cb(err)
+            accum.push.apply(accum, res)
+            cb(null, accum)
+          })
+
+          function expand (accum, expandFn, cb) {
+            expandFn(op.elm, function (err, ops) {
+              if (err) return cb(err)
+              accum.push.apply(accum, ops)
+              cb(null, accum)
+            })
+          }
+        }
+      }
+    })
   }
 
   function getRelationReferrers (elm, cb) {
