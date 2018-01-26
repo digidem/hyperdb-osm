@@ -203,6 +203,16 @@ Osm.prototype.query = function (bbox, cb) {
     collect(t, {encoding: 'object'}, cb)
   }
 
+  // Writes an OSM element to the output stream.
+  //
+  // 'gen' is the generation of the added element. This depends on the context
+  // that the element has been added in. A node directly returned by the geo
+  // query is gen=0, but a node indirectly found by looking at nodes in a way
+  // that that gen=0 node belongs to is a gen=1. Same with ways: a way visited
+  // by a gen=0 node is also gen=0, but one found by an indirect gen=1 node is
+  // also gen=1. This is a bit difficult to wrap one's head around, but this is
+  // necessary to prevent any elements from being processed more times than
+  // they need to be.
   function add (elm, gen) {
     var alreadySeen = seen[0][elm.version]
     if (gen === 1) alreadySeen = alreadySeen || seen[1][elm.version]
