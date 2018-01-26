@@ -227,7 +227,7 @@ Osm.prototype.query = function (bbox, cb) {
 
         stack = stack.filter(function (op) {
           var key = op.elm.version
-          for (var i=0; i < op.expand.length; i++) {
+          for (var i = 0; i < op.expand.length; i++) {
             key += op.expand[i].name
           }
           add(op.elm)

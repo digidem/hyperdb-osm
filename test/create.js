@@ -4,7 +4,6 @@ var hyper = require('hyperdb')
 var P2P = require('p2p-db')
 var Osm = require('..')
 var ram = require('random-access-memory')
-var memdb = require('memdb')
 
 test('incorrect db init', function (t) {
   t.plan(3)
