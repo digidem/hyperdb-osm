@@ -9,7 +9,6 @@ var utils = require('./lib/utils')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
-var createChangesetsIndex = require('./lib/changesets-index')
 var createGeoIndex = require('./lib/geo-index')
 var createRefsIndex = require('./lib/refs-index')
 
@@ -30,7 +29,6 @@ function Osm (api) {
   this.dbPrefix = '/osm'
 
   // Create indexes
-  this.changesets = createChangesetsIndex(this.db, this.index)
   this.refs = createRefsIndex(this.db, this.index)
   this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), api.pointstore)
 }
@@ -165,8 +163,8 @@ Osm.prototype.batch = function (ops, cb) {
 // Id -> { id, version }
 Osm.prototype.getChanges = function (id, cb) {
   var self = this
-  this.changesets.ready(function () {
-    self.changesets.getElements(id, cb)
+  this.refs.ready(function () {
+    self.refs.getReferersById(id, cb)
   })
 }
 

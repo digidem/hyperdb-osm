@@ -115,7 +115,7 @@ test('relations on bbox nodes', function (t) {
       members: [
         { type: 'node',
           id: 'A' }
-      ] },
+      ] }
   ]
 
   var queries = [
@@ -152,7 +152,7 @@ test('ways', function (t) {
       lon: '5' },
     { type: 'way',
       id: 'D',
-      refs: [ 'A', 'B', 'C' ] },
+      refs: [ 'A', 'B', 'C' ] }
   ]
 
   var queries = [
@@ -202,7 +202,7 @@ test('relations on ways and nodes', function (t) {
           role: 'foo' },
         { type: 'way',
           id: 'D',
-          role: 'bar' },
+          role: 'bar' }
       ]
     }
   ]
