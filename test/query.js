@@ -227,7 +227,7 @@ test('relations on ways and nodes', function (t) {
   })
 })
 
-test('relation on out-of-bbox node of a way', function (t) {
+test('relation + super-relation on out-of-bbox node of a way', function (t) {
   var db = createDb()
 
   var data = [
