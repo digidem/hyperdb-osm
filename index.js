@@ -350,6 +350,8 @@ Osm.prototype.query = function (bbox, cb) {
           if (!--pending) cb(null, res)
           continue
         }
+        seen[gen][refs[i].id] = true
+
         self.get(refs[i].id, function (err, elms) {
           if (err) return cb(err)
           for (var j = 0; j < elms.length; j++) {
@@ -363,6 +365,9 @@ Osm.prototype.query = function (bbox, cb) {
 
   function getAllHeads (id, cb) {
     var res = []
+
+    if (seen[0][id]) return cb(null, [])
+    seen[0][id] = true
 
     self.get(id, function (err, elms) {
       if (err) return cb(err)
