@@ -346,6 +346,10 @@ Osm.prototype.query = function (bbox, cb) {
 
       var pending = refs.length
       for (var i = 0; i < refs.length; i++) {
+        if (seen[gen][refs[i].version]) {
+          if (!--pending) cb(null, res)
+          continue
+        }
         self.get(refs[i].id, function (err, elms) {
           if (err) return cb(err)
           for (var j = 0; j < elms.length; j++) {
