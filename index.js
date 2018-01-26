@@ -6,6 +6,7 @@ var readonly = require('read-only-stream')
 var sub = require('subleveldown')
 var collect = require('collect-stream')
 var utils = require('./lib/utils')
+var once = require('once')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -170,8 +171,7 @@ Osm.prototype.getChanges = function (id, cb) {
 
 // BoundingBox -> (Stream or Callback)
 Osm.prototype.query = function (bbox, cb) {
-  var seen = {}
-  var processed = {}
+  var seen = [{}, {}]
   var t
 
   var err = validateBoundingBox(bbox)
@@ -203,180 +203,157 @@ Osm.prototype.query = function (bbox, cb) {
     collect(t, {encoding: 'object'}, cb)
   }
 
-  function add (elm) {
-    if (!seen[elm.version]) {
-      seen[elm.version] = true
+  function add (elm, gen) {
+    var alreadySeen = seen[0][elm.version]
+    if (gen === 1) alreadySeen = alreadySeen || seen[1][elm.version]
+
+    if (!seen[0][elm.version] && !seen[1][elm.version]) {
       t.push(elm)
     }
+
+    if (!alreadySeen) {
+      seen[gen][elm.version] = true
+      seen[1][elm.version] = true
+    }
+
+    return !alreadySeen
   }
 
+  // TODO: can we up the concurrency here & rely on automatic backpressure?
   function onPoint (version, _, next) {
-    // console.log('onPoint', version)
+    next = once(next)
+
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
 
-      var root = {
-        elm: elm,
-        expand: [expandWayReferers, expandRelationReferers]
-      }
+      add(elm, 0)
 
-      reduceAndCollect([root], next)
+      // Get all referrer ways and relations recursively.
+      getRefererElementsRec(elm, 0, function (err, res) {
+        if (err) return next(err)
+        if (!res.length) return next()
+        // console.log(elm.version, res.length)
 
-      function reduceAndCollect (stack, done) {
-        if (!stack.length) return done()
+        var pending = res.length
+        for (var i = 0; i < res.length; i++) {
+          var elm2 = res[i]
+          if (elm2.type === 'way') {
+            pending++
+            getWayNodes(elm2, function (err, nodes) {
+              if (err) return next(err)
 
-        stack = stack.filter(function (op) {
-          var key = op.elm.version
-          for (var i = 0; i < op.expand.length; i++) {
-            key += op.expand[i].name
-          }
-          add(op.elm)
-          if (!processed[key]) {
-            processed[key] = true
-            return true
-          }
-          return false
-        })
+              pending += nodes.length
+              if (!--pending) return next()
 
-        async.reduce(stack, [], reduceOp, function (err, res) {
-          if (err) return done(err)
-          reduceAndCollect(res, done)
-        })
-
-        // Reduce an op with a single expand function
-        function reduceOp (accum, op, cb) {
-          async.reduce(op.expand, [], expand, function (err, res) {
-            if (err) return cb(err)
-            accum.push.apply(accum, res)
-            cb(null, accum)
-          })
-
-          function expand (accum, expandFn, cb) {
-            expandFn(op.elm, function (err, ops) {
-              if (err) return cb(err)
-              accum.push.apply(accum, ops)
-              cb(null, accum)
+              // Recursively get their heads & relations
+              for (var j = 0; j < nodes.length; j++) {
+                getWayNodeRec(nodes[j], function (err, elms) {
+                  if (err) return cb(err)
+                  if (!--pending) return next()
+                })
+              }
             })
           }
+
+          getAllHeads(elm.id, function (err, heads) {
+            if (err) return next(err)
+            if (!--pending) return next()
+          })
         }
-      }
+      })
     })
   }
 
-  function getRelationReferrers (elm, cb) {
-    getRefererElements(elm, function (err, elms) {
+  // Get all heads of all nodes in a way.
+  function getWayNodes (elm, cb) {
+    cb = once(cb)
+    var res = []
+    var pending = elm.refs.length
+
+    for (var i = 0; i < elm.refs.length; i++) {
+      getAllHeads(elm.refs[i], function (err, heads) {
+        if (err) cb(err)
+        res.push.apply(res, heads)
+        if (!--pending) return cb(null, res)
+      })
+    }
+  }
+
+  // Get all heads of the node, and all relations referring to it (recursively).
+  function getWayNodeRec (elm, cb) {
+    cb = once(cb)
+    var res = []
+    var pending = 2
+
+    getRefererElementsRec(elm, 1, function (err, elms) {
       if (err) return cb(err)
+      res.push.apply(res, elms)
+      if (!--pending) cb(null, res)
+    })
 
-      async.reduce(elms, [], reducer, cb)
+    getAllHeads(elm.id, function (err, heads) {
+      if (err) return cb(err)
+      res.push.apply(res, heads)
+      if (!--pending) cb(null, res)
+    })
+  }
 
-      function reducer (accum, elm, cb) {
-        if (elm.type === 'relation') {
-          accum.push(elm)
-        }
-        cb(null, accum)
+  // Get all head versions of all ways and relations referring to an element,
+  // recursively.
+  function getRefererElementsRec (elm, gen, cb) {
+    cb = once(cb)
+    var res = []
+
+    getRefererElements(elm, gen, function (err, elms) {
+      if (err) return cb(err)
+      if (!elms.length) return cb(null, [])
+
+      var pending = elms.length
+      for (var i = 0; i < elms.length; i++) {
+        res.push(elms[i])
+
+        getRefererElementsRec(elms[i], gen, function (err, elms) {
+          if (err) return cb(err)
+          for (var j = 0; j < elms.length; j++) {
+            res.push(elms[j])
+          }
+          if (!--pending) cb(null, res)
+        })
       }
     })
   }
 
   // Get all head versions of all ways and relations referring to an element.
-  function getRefererElements (elm, cb) {
+  function getRefererElements (elm, gen, cb) {
+    cb = once(cb)
+    var res = []
+
     self.refs.getReferersById(elm.id, function (err, refs) {
       if (err) return cb(err)
+      if (!refs.length) return cb(null, [])
 
-      var refIds = refs.map(function (ref) { return ref.id })
-      async.reduce(refIds, [], reducer, cb)
-
-      function reducer (accum, id, cb) {
-        self.get(id, function (err, elms) {
+      var pending = refs.length
+      for (var i = 0; i < refs.length; i++) {
+        self.get(refs[i].id, function (err, elms) {
           if (err) return cb(err)
-          accum.push.apply(accum, elms)
-          cb(null, accum)
+          for (var j = 0; j < elms.length; j++) {
+            if (add(elms[j], gen)) res.push(elms[j])
+          }
+          if (!--pending) cb(null, res)
         })
       }
     })
   }
 
-  // ----------------------------------------------------------------
-  // Expansion functions for queried elements.
-  // ----------------------------------------------------------------
+  function getAllHeads (id, cb) {
+    var res = []
 
-  // Get all ways referring to this element.
-  function expandWayReferers (elm, cb) {
-    getRefererElements(elm, function (err, elms) {
+    self.get(id, function (err, elms) {
       if (err) return cb(err)
-
-      var res = elms
-        .filter(function (elm) { return elm.type === 'way' })
-        .map(function (elm) {
-          return {
-            elm: elm,
-            expand: [expandAllHeadVersions, expandRelationReferers]
-          }
-        })
+      for (var i = 0; i < elms.length; i++) {
+        if (add(elms[i], 1)) res.push(elms[i])
+      }
       cb(null, res)
     })
-  }
-
-  // Recursively expand to all relations referring to this element.
-  function expandRelationReferers (elm, cb) {
-    getRelationReferrers(elm, function (err, elms) {
-      if (err) return cb(err)
-
-      var res = elms
-        .map(function (elm) {
-          return {
-            elm: elm,
-            expand: [expandRelationReferers]
-          }
-        })
-      cb(null, res)
-    })
-  }
-
-  // Expands to all head versions of the element.
-  function expandAllHeadVersions (elm, cb) {
-    self.get(elm.id, function (err, elms) {
-      if (err) return cb(err)
-
-      var res = elms
-        .map(function (elm) {
-          if (elm.type === 'way') {
-            return {
-              elm: elm,
-              expand: [expandWayNodes]
-            }
-          } else if (elm.type === 'node') {
-            return {
-              elm: elm,
-              expand: [expandRelationReferers]
-            }
-          }
-        })
-      cb(null, res)
-    })
-  }
-
-  // Expands to all nodes in a way.
-  //
-  // TODO: this could be more efficient if relations were expanded only on ONE
-  // id from the set of heads of a node
-  function expandWayNodes (elm, cb) {
-    async.reduce(elm.refs, [], reducer, cb)
-
-    function reducer (accum, id, cb) {
-      self.get(id, function (err, elms) {
-        if (err) return cb(err)
-
-        var res = elms
-          .map(function (elm) {
-            return {
-              elm: elm,
-              expand: [expandRelationReferers]
-            }
-          })
-        accum.push.apply(accum, res)
-        cb(null, accum)
-      })
-    }
   }
 }
