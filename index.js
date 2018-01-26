@@ -244,6 +244,8 @@ Osm.prototype.query = function (bbox, cb) {
         if (!res.length) return next()
         // console.log(elm.version, res.length)
 
+        // For each element that refers to the node, get all of its forked
+        // heads and, for ways, get all nodes they reference.
         var pending = res.length
         for (var i = 0; i < res.length; i++) {
           var elm2 = res[i]
