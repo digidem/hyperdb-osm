@@ -242,7 +242,6 @@ Osm.prototype.query = function (bbox, cb) {
       getRefererElementsRec(elm, 0, function (err, res) {
         if (err) return next(err)
         if (!res.length) return next()
-        // console.log(elm.version, res.length)
 
         // For each element that refers to the node, get all of its forked
         // heads and, for ways, get all nodes they reference.
@@ -339,6 +338,9 @@ Osm.prototype.query = function (bbox, cb) {
   function getRefererElements (elm, gen, cb) {
     cb = once(cb)
     var res = []
+
+    // XXX: uncomment this to skip ref lookups on indirect nodes
+    // if (gen === 1) return cb(null, [])
 
     self.refs.getReferersById(elm.id, function (err, refs) {
       if (err) return cb(err)
