@@ -9,12 +9,12 @@ test('no bbox', function (t) {
 
   var bbox = null
 
-  db.osm.query(bbox, function (err, elements) {
+  db.query(bbox, function (err, elements) {
     t.ok(err instanceof Error)
     t.equals(elements, undefined)
   })
 
-  collect(db.osm.query(bbox), function (err, elements) {
+  collect(db.query(bbox), function (err, elements) {
     t.ok(err instanceof Error)
     t.equals(elements, undefined)
   })
@@ -27,12 +27,12 @@ test('bad bbox', function (t) {
 
   var bbox = [[5, -5], [-5, 5]]
 
-  db.osm.query(bbox, function (err, elements) {
+  db.query(bbox, function (err, elements) {
     t.ok(err instanceof Error)
     t.equals(elements, undefined)
   })
 
-  collect(db.osm.query(bbox), function (err, elements) {
+  collect(db.query(bbox), function (err, elements) {
     t.ok(err instanceof Error)
     t.equals(elements, undefined)
   })
@@ -45,13 +45,13 @@ test('query empty dataset', function (t) {
 
   var bbox = [[-5, 5], [-5, 5]]
 
-  db.osm.query(bbox, function (err, elements) {
+  db.query(bbox, function (err, elements) {
     t.error(err)
     t.ok(Array.isArray(elements))
     t.equals(elements.length, 0)
   })
 
-  collect(db.osm.query(bbox), function (err, elements) {
+  collect(db.query(bbox), function (err, elements) {
     t.error(err)
     t.ok(Array.isArray(elements))
     t.equals(elements.length, 0)
@@ -81,16 +81,16 @@ test('query random dataset', function (t) {
         value: node
       }
     })
-  db.osm.batch(batch, function (err) {
+  db.batch(batch, function (err) {
     t.error(err)
 
-    db.osm.query(bbox, function (err, elements) {
+    db.query(bbox, function (err, elements) {
       t.error(err)
       t.ok(Array.isArray(elements))
       t.equals(elements.length, 100)
     })
 
-    collect(db.osm.query(bbox), function (err, elements) {
+    collect(db.query(bbox), function (err, elements) {
       t.error(err)
       t.ok(Array.isArray(elements))
       t.equals(elements.length, 100)

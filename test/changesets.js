@@ -32,13 +32,13 @@ test('changeset: get elements', function (t) {
     ]
   }
 
-  db.osm.create(node, function (err, elm1) {
+  db.create(node, function (err, elm1) {
     t.ifError(err)
-    db.osm.create(way, function (err, elm2) {
+    db.create(way, function (err, elm2) {
       t.ifError(err)
-      db.osm.create(relation, function (err, elm3) {
+      db.create(relation, function (err, elm3) {
         t.ifError(err)
-        db.osm.getChanges('9', function (err, res) {
+        db.getChanges('9', function (err, res) {
           t.ifError(err)
           res = res.map(function (x) { return x.id })
           var expected = [elm1.id, elm2.id, elm3.id].sort()
@@ -82,19 +82,19 @@ test('changeset: multiple changesets', function (t) {
     ]
   }
 
-  db.osm.create(node, function (err, elm1) {
+  db.create(node, function (err, elm1) {
     t.ifError(err)
-    db.osm.create(way, function (err, elm2) {
+    db.create(way, function (err, elm2) {
       t.ifError(err)
-      db.osm.create(relation, function (err, elm3) {
+      db.create(relation, function (err, elm3) {
         t.ifError(err)
-        db.osm.getChanges('9', function (err, res) {
+        db.getChanges('9', function (err, res) {
           t.ifError(err)
           res = res.map(function (x) { return x.id })
           var expected = [elm1.id, elm2.id].sort()
           t.equals(res.length, 2)
           t.deepEquals(res.sort(), expected)
-          db.osm.getChanges('21', function (err, res) {
+          db.getChanges('21', function (err, res) {
             t.ifError(err)
             res = res.map(function (x) { return x.id })
             var expected = [elm3.id]

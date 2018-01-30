@@ -9,7 +9,7 @@ module.exports = function (t, db, data, expected, cb) {
     }
   })
 
-  db.osm.batch(batch, function (err) {
+  db.batch(batch, function (err) {
     t.error(err)
 
     ;(function next () {
@@ -17,14 +17,14 @@ module.exports = function (t, db, data, expected, cb) {
       if (!q) return cb()
       var pending = 2
 
-      db.osm.query(q.bbox, function (err, res) {
+      db.query(q.bbox, function (err, res) {
         t.error(err, 'no error on cb query')
         var ids = res.map(function (elm) { return elm.id }).sort()
         t.deepEquals(ids, q.expected.sort(), 'ids match cb query')
         if (!--pending) next()
       })
 
-      collect(db.osm.query(q.bbox), function (err, res) {
+      collect(db.query(q.bbox), function (err, res) {
         t.error(err, 'no error on streaming query')
         var ids = res.map(function (elm) { return elm.id }).sort()
         t.deepEquals(ids, q.expected.sort(), 'ids match cb query')

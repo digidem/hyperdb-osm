@@ -1,25 +1,24 @@
-# p2p-db-osm
+# hyperdb-osm
 
-> Pluggable API for [p2p-db][p2p-db] adding OpenStreetMap data types and
-> querying.
+> Peer-to-peer OpenStreetMap database over hyperdb.
 
 ## Usage
 
 ```js
-var P2P = require('p2p-db')
-var osm = require('p2p-db-osm')
+var hyperosm = require('hyperdb-osm')
 var hyperdb = require('hyperdb')
 var ram = require('random-access-memory')
 var memdb = require('memdb')
 var Geo = require('grid-point-store')
 
-// Create p2p-db and p2p-db-osm dependencies
-var hyperdb = P2P.provide('hyperdb', hyperdb(ram, { valueEncoding: 'json' }))
-var leveldb = P2P.provide('leveldb', memdb())
-var pointstore = P2P.provide('pointstore', Geo(memdb()))
-
-// Create the p2p-db
-var db = P2P([hyperdb, leveldb, pointstore, osm])
+var db = hyperdb(ram, { valueEncoding: 'json' }))
+var indexes = memdb()
+var geo = Geo(memdb())
+var osm = hyperosm({
+  db: db,
+  index: indexes,
+  pointstore: geo
+})
 
 var node = {
   type: 'node',
@@ -29,10 +28,10 @@ var node = {
   changeset: 'abcdef'
 }
 
-db.osm.create(node, function (err, node) {
+osm.create(node, function (err, node) {
   console.log('created node with id', node.id)
-  db.osm.get(node.id, function (err, elms) {
-    console.log('got elements at', node.id)
+  var bbox = [[-13, -11], [1, 2]]
+  osm.query(bbox, function (err, elms) {
     console.log(elms)
   })
 })
@@ -42,7 +41,6 @@ outputs
 
 ```
 created node with id 78d06921416fe95b
-got elements at 78d06921416fe95b
 [ { type: 'node',
     lat: '-12.7',
     lon: '1.3',
@@ -56,74 +54,31 @@ got elements at 78d06921416fe95b
 ## API
 
 ```js
-var osm = require('p2p-db-osm')
+var hyperosm = require('hyperdb-osm')
 ```
 
-Returns a [depj](https://github.com/noffle/depj) dependency object, which is no
-more than
+### var db = hyperosm(opts)
 
-```js
-module.exports = {
-  gives: 'osm',
-  needs: ['hyperdb', 'leveldb', 'pointstore'],
-  create: function (api) {
-    return new Osm(api)
-  }
-}
-```
+Expected `opts` include:
 
-This is passed as a dependency directly into the
-[p2p-db](https://github.com/noffle/p2p-db) constructor. See p2p-db for more
-details on how this works.
+- `db`: a [hyperdb](https://github.com/mafintosh/hyperdb) instance
+- `index`: a [levelup](https://github.com/level/levelup) instance
+- `pointstore`: a [grid-point-store](https://github.com/noffle/grid-point-store)
+instance
 
-You create a new p2p-db with p2p-db-osm like so:
-
-```js
-var P2P = require('p2p-db')
-
-var db = P2P([
-  P2P.provide('hyperdb', hyperdb),
-  P2P.provide('leveldb', leveldb),
-  P2P.provide('pointstore', pointstore),
-  require('p2p-db-osm')
-])
-```
-
-Where `hyperdb` is a [hyperdb](https://github.com/mafintosh/hyperdb) instance,
-`leveldb` is a [levelup](https://github.com/level/levelup) instance, and
-`pointstore` is a [grid-point-store](https://github.com/noffle/grid-point-store)
-instance. The order they are given doesn't matter --
-[depj](https://github.com/noffle/depj) sorts it out.
-
-If you just want to use p2p-db-osm and don't care about p2p-db, that's fine too!
-You can get around the dependency management business and make a plain osmdb
-like so:
-
-```js
-var osm = require('p2p-db-osm')
-
-var osmdb = osm.create({
-  hyperdb: hyperdb,
-  leveldb: leveldb,
-  pointstore: pointstore
-})
-
-osmdb.create({type: 'node', ...})  // etc
-```
-
-### db.osm.create(element, cb)
+### osm.create(element, cb)
 
 Create the new OSM element `element` and add it to the database. The resulting
 element, populated with the `id` and `version` fields, is returned by the
 callback `cb`.
 
-### db.osm.get(id, cb)
+### osm.get(id, cb)
 
 Fetch all of the newest OSM elements with the ID `id`. In the case that multiple
 peers modified an element prior to sync'ing with each other, there may be
 multiple latest elements ("heads") for the ID.
 
-### db.osm.put(id, element, cb)
+### osm.put(id, element, cb)
 
 Update an existing element with ID `id` to be the OSM element `element`. The new
 element should have all fields that the OSM element would have. The `type` of
@@ -134,7 +89,7 @@ replace them all.
 
 `cb` is called with the new element, including `id` and `version` properties.
 
-### db.osm.batch(ops, cb)
+### osm.batch(ops, cb)
 
 Create and update many elements atomically. `ops` is an array of objects
 describing the elements to be added or updated.
@@ -155,7 +110,7 @@ fast as possible.
 
 *TODO: accept `opts.validate` or `opts.strict`*
 
-### var rs = db.osm.query(bbox[, cb])
+### var rs = osm.query(bbox[, cb])
 
 Retrieves all `node`s, `way`s, and `relation`s touching the bounding box `bbox`.
 
@@ -176,7 +131,7 @@ The following [algorithm](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrievin
 2. All ways that reference at least one node that is inside a given bounding box, any relations that reference them (the ways), and any nodes outside the bounding box that the ways may reference.
 3. All relations that reference one of the nodes, ways or relations included due to the above rules. (This does not apply recursively; meaning that elements referenced by a relation are not returned by virtue of being in that relation.)
 
-### db.osm.getChanges(id, cb)
+### osm.getChanges(id, cb)
 
 Fetch a list of all OSM elements belonging to the changeset `id`. `cb` is called
 with an array of objects of the form:
@@ -212,6 +167,4 @@ $ npm install p2p-db-osm
 ## License
 
 ISC
-
-[p2p-db]: https://github.com/noffle/p2p-db
 

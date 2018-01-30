@@ -13,25 +13,22 @@ var validateBoundingBox = require('./lib/utils').validateBoundingBox
 var createGeoIndex = require('./lib/geo-index')
 var createRefsIndex = require('./lib/refs-index')
 
-module.exports = {
-  gives: 'osm',
-  needs: ['hyperdb', 'leveldb', 'pointstore'],
-  create: function (api) {
-    return new Osm(api)
-  }
-}
+module.exports = Osm
 
-function Osm (api) {
-  if (!(this instanceof Osm)) return new Osm(api)
-  if (!api) throw new Error('missing param "api"')
+function Osm (opts) {
+  if (!(this instanceof Osm)) return new Osm(opts)
+  if (!opts.db) throw new Error('missing param "db"')
+  if (!opts.index) throw new Error('missing param "index"')
+  if (!opts.pointstore) throw new Error('missing param "pointstore"')
 
-  this.db = api.hyperdb
-  this.index = api.leveldb
-  this.dbPrefix = '/osm'
+  this.db = opts.db
+  this.index = opts.index
+  this.pointstore = opts.pointstore
+  this.dbPrefix = opts.prefix || '/osm'
 
   // Create indexes
   this.refs = createRefsIndex(this.db, this.index)
-  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), api.pointstore)
+  this.geo = createGeoIndex(this.db, sub(this.index, 'geo'), this.pointstore)
 }
 
 Osm.prototype.ready = function (cb) {

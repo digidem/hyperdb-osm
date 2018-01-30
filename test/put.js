@@ -14,7 +14,7 @@ test('update to id that doesnt exist', function (t) {
     timestamp: '2017-10-10T19:55:08.570Z'
   }
 
-  db.osm.put('1213230', node, function (err) {
+  db.put('1213230', node, function (err) {
     t.ok(err instanceof Error)
   })
 })
@@ -37,9 +37,9 @@ test('update to different type', function (t) {
     nodes: ['1']
   }
 
-  db.osm.create(node, function (err, node) {
+  db.create(node, function (err, node) {
     t.error(err)
-    db.osm.put(node.id, way, function (err) {
+    db.put(node.id, way, function (err) {
       console.log('err', err)
       t.ok(err instanceof Error)
     })
@@ -67,10 +67,10 @@ test('update good nodes', function (t) {
 
   var db = createDb()
 
-  db.osm.create(nodes[0], function (err, elm1) {
+  db.create(nodes[0], function (err, elm1) {
     t.error(err)
     t.ok(elm1)
-    db.osm.put(elm1.id, nodes[1], function (err, elm2) {
+    db.put(elm1.id, nodes[1], function (err, elm2) {
       t.error(err)
       t.ok(elm1)
       t.equals(elm1.id, elm2.id)
@@ -135,7 +135,7 @@ test('update bad nodes', function (t) {
 
   var db = createDb()
 
-  db.osm.create({
+  db.create({
     type: 'node',
     changeset: '12',
     lat: '12',
@@ -143,7 +143,7 @@ test('update bad nodes', function (t) {
   }, function (err, node) {
     t.error(err)
     nodes.forEach(function (node, idx) {
-      db.osm.put(node.id, node, function (err) {
+      db.put(node.id, node, function (err) {
         t.ok(err instanceof Error, 'nodes[' + idx + ']')
       })
     })
@@ -170,11 +170,11 @@ test('delete a node', function (t) {
     visible: false
   }
 
-  db.osm.create(node, function (err, elm) {
+  db.create(node, function (err, elm) {
     t.error(err)
-    db.osm.put(elm.id, nodeDeletion, function (err) {
+    db.put(elm.id, nodeDeletion, function (err) {
       t.error(err)
-      db.osm.get(elm.id, function (err, elms) {
+      db.get(elm.id, function (err, elms) {
         t.error(err)
         t.equals(elms.length, 1)
         t.equals(elms[0].id, elm.id)
@@ -193,17 +193,17 @@ test('version lookup correctness', function (t) {
     type: 'changeset'
   }
 
-  db.osm.create(changes, function (err, elm1) {
+  db.create(changes, function (err, elm1) {
     t.error(err)
     changes.tags = { foo: 'bar' }
-    db.osm.put(elm1.id, changes, function (err, elm2) {
+    db.put(elm1.id, changes, function (err, elm2) {
       t.error(err)
       t.deepEquals(elm2.tags, { foo: 'bar' })
-      db.osm.getByVersion(elm1.version, function (err, elm3) {
+      db.getByVersion(elm1.version, function (err, elm3) {
         t.error(err)
         t.equals(elm1.id, elm3.id)
         t.equals(elm1.version, elm3.version)
-        db.osm.getByVersion(elm2.version, function (err, elm4) {
+        db.getByVersion(elm2.version, function (err, elm4) {
           t.error(err)
           t.equals(elm2.id, elm4.id)
           t.equals(elm2.version, elm4.version)

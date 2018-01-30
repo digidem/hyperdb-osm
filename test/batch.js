@@ -29,7 +29,7 @@ test('create nodes', function (t) {
     }
   })
 
-  db.osm.batch(batch, function (err) {
+  db.batch(batch, function (err) {
     t.error(err)
     // TODO: do a hyperdb#createHistoryStream to check for entries
   })
@@ -56,7 +56,7 @@ test('create + update nodes', function (t) {
     }
   ]
 
-  db.osm.create(nodes[0], function (err, node) {
+  db.create(nodes[0], function (err, node) {
     t.error(err)
 
     nodes[0].lat = '75'
@@ -69,9 +69,9 @@ test('create + update nodes', function (t) {
       }
     })
 
-    db.osm.batch(batch, function (err) {
+    db.batch(batch, function (err) {
       t.error(err)
-      db.osm.get(node.id, function (err, elements) {
+      db.get(node.id, function (err, elements) {
         t.error(err)
         t.equals(elements.length, 1)
         var element = elements[0]

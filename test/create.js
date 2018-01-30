@@ -42,7 +42,7 @@ test('create unknown element', function (t) {
     timestamp: '2017-10-10T19:55:08.570Z'
   }
 
-  db.osm.create(node, function (err) {
+  db.create(node, function (err) {
     t.ok(err instanceof Error)
   })
 })
@@ -69,7 +69,7 @@ test('create good nodes', function (t) {
   var db = createDb()
 
   nodes.forEach(function (node) {
-    db.osm.create(node, function (err, elm) {
+    db.create(node, function (err, elm) {
       t.error(err)
       t.ok(elm)
       t.ok(elm.id)
@@ -149,7 +149,7 @@ test('create bad nodes', function (t) {
   var db = createDb()
 
   nodes.forEach(function (node, idx) {
-    db.osm.create(node, function (err) {
+    db.create(node, function (err) {
       t.ok(err instanceof Error, 'nodes[' + idx + ']')
     })
   })
@@ -182,7 +182,7 @@ test('create good ways', function (t) {
   var db = createDb()
 
   ways.forEach(function (node) {
-    db.osm.create(node, function (err, elm) {
+    db.create(node, function (err, elm) {
       t.error(err)
       t.ok(elm)
       t.ok(elm.id)
@@ -233,7 +233,7 @@ test('create bad ways', function (t) {
   var db = createDb()
 
   ways.forEach(function (node, idx) {
-    db.osm.create(node, function (err) {
+    db.create(node, function (err) {
       t.ok(err instanceof Error, 'ways[' + idx + ']')
     })
   })
@@ -277,7 +277,7 @@ test('create good relations', function (t) {
   var db = createDb()
 
   relations.forEach(function (node) {
-    db.osm.create(node, function (err, elm) {
+    db.create(node, function (err, elm) {
       t.error(err)
       t.ok(elm)
       t.ok(elm.id)
@@ -373,7 +373,7 @@ test('create bad relations </pun>', function (t) {
   var db = createDb()
 
   relations.forEach(function (node, idx) {
-    db.osm.create(node, function (err) {
+    db.create(node, function (err) {
       t.ok(err instanceof Error, 'relations[' + idx + ']')
     })
   })
@@ -395,7 +395,7 @@ test('create good changesets', function (t) {
   var db = createDb()
 
   changesets.forEach(function (node) {
-    db.osm.create(node, function (err, elm) {
+    db.create(node, function (err, elm) {
       t.error(err)
       t.ok(elm)
       t.ok(elm.id)
@@ -417,7 +417,7 @@ test('create bad changesets', function (t) {
   var db = createDb()
 
   changesets.forEach(function (node, idx) {
-    db.osm.create(node, function (err) {
+    db.create(node, function (err) {
       t.ok(err instanceof Error, 'changesets[' + idx + ']')
     })
   })
@@ -432,7 +432,7 @@ test('create changeset', function (t) {
     type: 'changeset'
   }
 
-  db.osm.create(changes, function (err, elm) {
+  db.create(changes, function (err, elm) {
     t.error(err)
     t.ok(elm)
     t.ok(elm.id)
@@ -447,9 +447,9 @@ test('version lookup correctness', function (t) {
     type: 'changeset'
   }
 
-  db.osm.create(changes, function (err, elm1) {
+  db.create(changes, function (err, elm1) {
     t.error(err)
-    db.osm.getByVersion(elm1.version, function (err, elm2) {
+    db.getByVersion(elm1.version, function (err, elm2) {
       t.error(err)
       t.equals(elm1.id, elm2.id)
       t.equals(elm1.version, elm2.version)
