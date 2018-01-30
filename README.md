@@ -156,6 +156,27 @@ API above.
 
 *TODO: talk about forking data & forking architecture*
 
+## Combining with other hyperdb modules
+
+If you had other modules that store data in a hyperdb, say `hyperdb-media` and
+`hyperdb-maptiles`, you could combine these and this module together with a very
+minimal amount of glue to create a simpler database interface for consumers:
+
+```js
+var hyperdb = Hyperdb(...)
+var osm = hyperosm(...)
+var media = hypermedia(...)
+var maptiles = hypertiles(...)
+
+var db = {
+  osm: osm,
+  users: users,
+  media: media,
+  tiles: maptiles,
+  replicate: hyperdb.replicate.bind(hyperdb)
+}
+```
+
 ## Install
 
 With [npm](https://npmjs.org/) installed, run
