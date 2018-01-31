@@ -1,13 +1,13 @@
 {
-  "name": "p2p-db-osm",
+  "name": "hyperdb-osm",
   "description": "API for p2p-db adding OpenStreetMap data types and querying.",
   "author": "Stephen Whitmore <sww@eight.net>",
   "version": "4.0.0",
   "repository": {
-    "url": "git://github.com/noffle/p2p-db-osm.git"
+    "url": "git://github.com/noffle/hyperdb-osm.git"
   },
-  "homepage": "https://github.com/noffle/p2p-db-osm",
-  "bugs": "https://github.com/noffle/p2p-db-osm/issues",
+  "homepage": "https://github.com/noffle/hyperdb-osm",
+  "bugs": "https://github.com/noffle/hyperdb-osm/issues",
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js",
