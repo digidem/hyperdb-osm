@@ -167,7 +167,12 @@ Osm.prototype.getChanges = function (id, cb) {
 }
 
 // BoundingBox -> (Stream or Callback)
-Osm.prototype.query = function (bbox, cb) {
+Osm.prototype.query = function (bbox, opts, cb) {
+  if (opts && !cb && typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+
   var seen = [{}, {}]
   var t
 
