@@ -182,10 +182,6 @@ Osm.prototype.query = function (bbox, cb) {
     }
   }
 
-  // Convert p2p-db-osm bbox format to grid-point-store format
-  // TODO(noffle): unify the bbox formats!
-  bbox = [[bbox[0][0], bbox[1][0]], [bbox[0][1], bbox[1][1]]]
-
   var self = this
   t = through.obj(onPoint)
   this.geo.ready(function () {

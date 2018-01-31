@@ -7,7 +7,7 @@ var memdb = require('memdb')
 module.exports = function () {
   var hyperdb = hyper(ram, { valueEncoding: 'json' })
   var leveldb = memdb()
-  var pointstore = Geo(memdb(), {zoomLevel: 10})
+  var pointstore = Geo({store: memdb(), zoomLevel: 10})
   var db = Osm({
     db: hyperdb,
     index: leveldb,
