@@ -9,6 +9,8 @@ module.exports = function (t, db, data, expected, cb) {
     }
   })
 
+  expected = expected.slice()
+
   db.batch(batch, function (err) {
     t.error(err)
 
