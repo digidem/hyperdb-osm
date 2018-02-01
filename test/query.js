@@ -353,6 +353,90 @@ test('opts.type: results sorted by type', function (t) {
   })
 })
 
+test.skip('return only latest version of a modified node', function (t) {
+  var db = createDb()
+
+  var node = {
+    type: 'node',
+    id: 'A',
+    lat: '0',
+    lon: '0',
+    tags: {}
+  }
+  var queries = [ {
+    bbox: [[-10, 10], [-10, 10]],
+    expected: [ 'A' ]
+  } ]
+
+  // Make sure node is present
+  queryTest(t, db, [node], queries, function () {
+    // Update node
+    node.tags = { foo: 'bar' }
+    node.changeset = '123'
+    db.put('A', node, function (err) {
+      t.error(err)
+      db.query(queries[0].bbox, function (err, res) {
+        t.error(err)
+        t.equals(res.length, 1)
+        t.equals(res[0].id, 'A')
+        t.deepEquals(res[0].tags, { foo: 'bar' })
+      })
+    })
+  })
+})
+
+test('return only latest way that references a node', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0',
+      tags: {} },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1',
+      tags: {} },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2',
+      tags: {} },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'],
+      tags: {} }
+  ]
+
+  var queries = [ {
+    bbox: [[-10, 10], [-10, 10]],
+    expected: [ 'A', 'B', 'C', 'D' ]
+  } ]
+
+  // Make sure node is present
+  queryTest(t, db, data, queries, function () {
+    // Update way
+    var way = data[3]
+    way.tags = { foo: 'bar' }
+    way.changeset = '123'
+    db.put('D', way, function (err) {
+      t.error(err)
+      db.query(queries[0].bbox, function (err, res) {
+        t.error(err)
+        t.equals(res.length, 4)
+        var ids = res.map(function (elm) { return elm.id }).sort()
+        t.deepEquals(ids, [ 'A', 'B', 'C', 'D' ])
+        var ways = res.filter(function (elm) { return elm.id === 'D' })
+        t.equals(ways.length, 1)
+        t.deepEquals(ways[0].tags, { foo: 'bar' })
+        t.end()
+      })
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
