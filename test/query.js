@@ -284,6 +284,75 @@ test('relation + super-relation on out-of-bbox node of a way', function (t) {
   })
 })
 
+test('opts.type: results sorted by type', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '5',
+      lon: '5' },
+    { type: 'way',
+      id: 'D',
+      refs: [ 'A', 'B', 'C' ] },
+    { type: 'relation',
+      id: 'E',
+      members: [
+        { type: 'node',
+          id: 'C',
+          role: 'foo' }
+      ]
+    }
+  ]
+
+  var bbox = [[-10, 0], [-10, 0]]
+
+  var batch = data.map(function (elm) {
+    var id = elm.id
+    delete elm.id
+    return {
+      type: 'put',
+      id: id,
+      value: elm
+    }
+  })
+  db.batch(batch, function (err) {
+    t.error(err)
+
+    var pending = 2
+
+    db.query(bbox, { order: 'type' }, function (err, res) {
+      t.error(err, 'no error on cb query')
+      t.equals(res.length, 5)
+      t.equals(res[0].type, 'node')
+      t.equals(res[1].type, 'node')
+      t.equals(res[2].type, 'node')
+      t.equals(res[3].type, 'way')
+      t.equals(res[4].type, 'relation')
+      if (!--pending) t.end()
+    })
+
+    collect(db.query(bbox, { order: 'type' }), function (err, res) {
+      t.error(err, 'no error on streaming query')
+      t.equals(res.length, 5)
+      t.equals(res[0].type, 'node')
+      t.equals(res[1].type, 'node')
+      t.equals(res[2].type, 'node')
+      t.equals(res[3].type, 'way')
+      t.equals(res[4].type, 'relation')
+      if (!--pending) t.end()
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))

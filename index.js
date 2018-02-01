@@ -172,7 +172,9 @@ Osm.prototype.query = function (bbox, opts, cb) {
     cb = opts
     opts = {}
   }
+  opts = opts || {}
 
+  // To prevent re-processing elements that were already processed.
   var seen = [{}, {}]
   var t
 
@@ -187,8 +189,11 @@ Osm.prototype.query = function (bbox, opts, cb) {
     }
   }
 
+  // For accumulating ways and relations when element type order matters.
+  var typeQueue = []
+
   var self = this
-  t = through.obj(onPoint)
+  t = through.obj(onPoint, onFlush)
   this.geo.ready(function () {
     self.refs.ready(function () {
       self.geo.queryStream(bbox).pipe(t)
@@ -216,7 +221,11 @@ Osm.prototype.query = function (bbox, opts, cb) {
     if (gen === 1) alreadySeen = alreadySeen || seen[1][elm.version]
 
     if (!seen[0][elm.version] && !seen[1][elm.version]) {
-      t.push(elm)
+      if (opts.order === 'type' && elm.type !== 'node') {
+        typeQueue.push(elm)
+      } else {
+        t.push(elm)
+      }
     }
 
     if (!alreadySeen) {
@@ -271,6 +280,11 @@ Osm.prototype.query = function (bbox, opts, cb) {
         }
       })
     })
+  }
+
+  function onFlush (cb) {
+    typeQueue.sort(cmpType).forEach(function (elm) { t.push(elm) })
+    cb()
   }
 
   // Get all heads of all nodes in a way.
@@ -377,4 +391,9 @@ Osm.prototype.query = function (bbox, opts, cb) {
       cb(null, res)
     })
   }
+}
+
+var typeOrder = { node: 0, way: 1, relation: 2 }
+function cmpType (a, b) {
+  return typeOrder[a.type] - typeOrder[b.type]
 }
