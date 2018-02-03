@@ -2,7 +2,7 @@
   "name": "hyperdb-osm",
   "description": "API for p2p-db adding OpenStreetMap data types and querying.",
   "author": "Stephen Whitmore <sww@eight.net>",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "repository": {
     "url": "git://github.com/noffle/hyperdb-osm.git"
   },
