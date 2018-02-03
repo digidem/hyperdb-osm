@@ -1,6 +1,6 @@
 {
   "name": "hyperdb-osm",
-  "description": "API for p2p-db adding OpenStreetMap data types and querying.",
+  "description": "Peer-to-peer OpenStreetMap database over hyperdb.",
   "author": "Stephen Whitmore <sww@eight.net>",
   "version": "4.0.2",
   "repository": {
@@ -21,8 +21,7 @@
     "openstreetmap",
     "p2p",
     "peer",
-    "hyperdb",
-    "p2p-db"
+    "hyperdb"
   ],
   "dependencies": {
     "async": "^2.6.0",

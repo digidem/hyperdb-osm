@@ -182,7 +182,7 @@ var db = {
 With [npm](https://npmjs.org/) installed, run
 
 ```
-$ npm install p2p-db-osm
+$ npm install hyperdb-osm
 ```
 
 ## License
