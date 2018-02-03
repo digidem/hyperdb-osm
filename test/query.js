@@ -353,7 +353,7 @@ test('opts.type: results sorted by type', function (t) {
   })
 })
 
-test.skip('return only latest version of a modified node', function (t) {
+test('return only latest version of a modified node', function (t) {
   var db = createDb()
 
   var node = {
@@ -380,6 +380,7 @@ test.skip('return only latest version of a modified node', function (t) {
         t.equals(res.length, 1)
         t.equals(res[0].id, 'A')
         t.deepEquals(res[0].tags, { foo: 'bar' })
+        t.end()
       })
     })
   })
