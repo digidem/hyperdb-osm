@@ -248,7 +248,7 @@ test('create good relations', function (t) {
       members: [
         {
           type: 'node',
-          id: '101'
+          ref: '101'
         }
       ]
     },
@@ -259,7 +259,7 @@ test('create good relations', function (t) {
       members: [
         {
           type: 'node',
-          id: '101',
+          ref: '101',
           role: 'best-friend'
         }
       ]
@@ -351,18 +351,8 @@ test('create bad relations </pun>', function (t) {
       tags: { foo: 'bar' },
       members: [
         {
-          ref: '17'
-        }
-      ]
-    },
-    {
-      type: 'relation',
-      changeset: '21',
-      tags: { foo: 'bar' },
-      members: [
-        {
           type: 'way',
-          id: 17
+          ref: 17
         }
       ]
     }

@@ -27,7 +27,7 @@ test('changeset: get elements', function (t) {
     members: [
       {
         type: 'node',
-        id: '101'
+        ref: '101'
       }
     ]
   }
@@ -77,7 +77,7 @@ test('changeset: multiple changesets', function (t) {
     members: [
       {
         type: 'node',
-        id: '101'
+        ref: '101'
       }
     ]
   }
