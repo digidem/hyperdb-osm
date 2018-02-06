@@ -1,24 +1,6 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
 
-test('update to id that doesnt exist', function (t) {
-  t.plan(1)
-
-  var db = createDb()
-
-  var node = {
-    type: 'node',
-    changeset: '9',
-    lat: '-11',
-    lon: '-10',
-    timestamp: '2017-10-10T19:55:08.570Z'
-  }
-
-  db.put('1213230', node, function (err) {
-    t.ok(err instanceof Error)
-  })
-})
-
 test('update to different type', function (t) {
   t.plan(2)
 

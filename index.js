@@ -104,40 +104,24 @@ Osm.prototype.getByVersion = function (osmVersion, cb) {
 Osm.prototype.put = function (id, element, cb) {
   var self = this
 
-  this.get(id, function (err, elms) {
+  // Check for type errors
+  var errs = checkElement(element)
+  if (errs.length) return cb(errs[0])
+
+  // Write to hyperdb
+  var key = self.dbPrefix + '/elements/' + id
+  // console.log('updating', key, '->', element)
+  self.db.put(key, element, function (err) {
     if (err) return cb(err)
 
-    // Ensure element already exists
-    if (elms.length === 0) {
-      return cb(new Error('element with id ' + id + ' doesnt exist'))
-    }
-
-    // Ensure existing type matches new type
-    var type = elms[0].type
-    if (type !== element.type) {
-      return cb(new Error('existing element is type ' + type +
-        ' but new element is type ' + element.type))
-    }
-
-    // Check for type errors
-    var errs = checkElement(element)
-    if (errs.length) return cb(errs[0])
-
-    // Write to hyperdb
-    var key = self.dbPrefix + '/elements/' + id
-    // console.log('updating', key, '->', element)
-    self.db.put(key, element, function (err) {
+    // TODO(noffle): need hyperdb to return the 'node' that was created
+    var w = self.db._localWriter
+    w.head(function (err, node) {
       if (err) return cb(err)
-
-      // TODO(noffle): need hyperdb to return the 'node' that was created
-      var w = self.db._localWriter
-      w.head(function (err, node) {
-        if (err) return cb(err)
-        var elm = Object.assign({}, element)
-        elm.id = id
-        elm.version = utils.versionFromKeySeq(w.key, node.seq)
-        cb(null, elm)
-      })
+      var elm = Object.assign({}, element)
+      elm.id = id
+      elm.version = utils.versionFromKeySeq(w.key, node.seq)
+      cb(null, elm)
     })
   })
 }
