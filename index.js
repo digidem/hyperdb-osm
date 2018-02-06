@@ -1,6 +1,5 @@
 module.exports = Osm
 
-var async = require('async')
 var through = require('through2')
 var readonly = require('read-only-stream')
 var sub = require('subleveldown')
@@ -32,11 +31,11 @@ function Osm (opts) {
 }
 
 Osm.prototype.ready = function (cb) {
-  var funcs = [this.changesets, this.refs, this.geo]
-    .filter(function (idx) { return !!idx })
-    .map(function (idx) { return idx.ready.bind(idx) })
-
-  async.map(funcs, function (fn, cb) { fn(cb) }, cb)
+  this.refs.ready(function () {
+    this.geo.ready(function () {
+      cb()
+    })
+  })
 }
 
 // OsmElement -> Error

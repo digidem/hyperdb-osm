@@ -24,7 +24,6 @@
     "hyperdb"
   ],
   "dependencies": {
-    "async": "^2.6.0",
     "collect-stream": "^1.2.1",
     "comparable-storable-types": "^1.0.0",
     "d64": "^1.0.0",
