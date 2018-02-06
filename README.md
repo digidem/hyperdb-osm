@@ -2,6 +2,16 @@
 
 > Peer-to-peer OpenStreetMap database over hyperdb.
 
+## Current Status
+
+*Experimental*
+
+Expect plenty of breaking changes -- [semver](https://semver.org/) will be
+respected. This isn't currently ready to be relied upon by other modules!
+
+If you're interested in this project, leave an issue and share a bit about what
+you're building!
+
 ## Usage
 
 ```js
