@@ -372,6 +372,11 @@ Osm.prototype.query = function (bbox, opts, cb) {
   }
 }
 
+Osm.prototype.createReplicationStream = function (opts) {
+  return this.db.replicate(opts)
+}
+Osm.prototype.replicate = Osm.prototype.createReplicationStream
+
 var typeOrder = { node: 0, way: 1, relation: 2 }
 function cmpType (a, b) {
   return typeOrder[a.type] - typeOrder[b.type]
