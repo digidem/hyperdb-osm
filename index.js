@@ -140,13 +140,9 @@ Osm.prototype.batch = function (ops, cb) {
   this.db.batch(batch, cb)
 }
 
-// TODO: return a stream if no cb is given
 // Id -> { id, version }
 Osm.prototype.getChanges = function (id, cb) {
-  var self = this
-  this.refs.ready(function () {
-    self.refs.getReferersById(id, cb)
-  })
+  return this.refs.getReferersById(id, cb)
 }
 
 // BoundingBox -> (Stream or Callback)

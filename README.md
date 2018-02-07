@@ -137,14 +137,25 @@ datasets.
 
 The following [algorithm](https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_.2Fapi.2F0.6.2Fmap) is used to determine what OSM elements are returned:
 
-1. All nodes that are inside a given bounding box and any relations that reference them.
-2. All ways that reference at least one node that is inside a given bounding box, any relations that reference them (the ways), and any nodes outside the bounding box that the ways may reference.
-3. All relations that reference one of the nodes, ways or relations included due to the above rules. (This does not apply recursively; meaning that elements referenced by a relation are not returned by virtue of being in that relation.)
+1. All nodes that are inside a given bounding box and any relations that
+   reference them.
+2. All ways that reference at least one node that is inside a given bounding
+   box, any relations that reference them (the ways), and any nodes outside the
+   bounding box that the ways may reference.
+3. All relations that reference one of the nodes, ways or relations included due
+   to the above rules. (This does not apply recursively; meaning that elements
+   referenced by a relation are not returned by virtue of being in that
+   relation.)
 
-### osm.getChanges(id, cb)
+### var rs = osm.getChanges(id[, cb])
 
-Fetch a list of all OSM elements belonging to the changeset `id`. `cb` is called
-with an array of objects of the form:
+Fetch a list of all OSM elements belonging to the changeset `id`.
+
+A callback parameter `cb` is optional. If given, it will be called as `cb(err,
+results)`. If not provided or set to `null`, a Readable stream will be returned
+that can be read from as results are ready.
+
+Objects of the following form are returned:
 
 ```js
 {
@@ -153,14 +164,14 @@ with an array of objects of the form:
 }
 ```
 
-*TODO: optionally return a readable stream*
-
 ## Deletions
 
 To delete an element, [OSM
 specifies](https://wiki.openstreetmap.org/wiki/Elements#Common_attributes) to
 set the `visible` property to `false`. This can be done using the `db.osm.put`
 API above.
+
+*TODO: use `deleted: true` instead of `visible: false`*
 
 ## Architecture
 
