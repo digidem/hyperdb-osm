@@ -59,19 +59,26 @@ test('create good nodes', function (t) {
     {
       type: 'node',
       changeset: '9',
-      lat: '-11',
-      lon: '-10'
+      lat: -13,
+      lon: -12
     }
   ]
 
-  t.plan(nodes.length * 4)
+  t.plan(nodes.length * 6)
 
   var db = createDb()
 
-  nodes.forEach(function (node) {
+  nodes.forEach(function (node, i) {
     db.create(node, function (err, elm) {
       t.error(err)
       t.ok(elm)
+      if (i === 0) {
+        t.equal(elm.lat, '-11')
+        t.equal(elm.lon, '-10')
+      } else {
+        t.equal(elm.lat, '-13')
+        t.equal(elm.lon, '-12')
+      }
       t.ok(elm.id)
       t.ok(elm.version)
     })
