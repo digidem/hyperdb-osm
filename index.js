@@ -92,10 +92,10 @@ Osm.prototype.get = function (id, cb) {
 Osm.prototype.getByVersion = function (osmVersion, cb) {
   utils.versionToNode(this.db, osmVersion, function (err, node) {
     if (err) return cb(err)
-    var elm = Object.assign({
+    var elm = Object.assign(node.value, {
       id: utils.hyperDbKeyToId(node.key),
       version: osmVersion
-    }, node.value)
+    })
     cb(null, elm)
   })
 }

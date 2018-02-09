@@ -28,6 +28,30 @@ test('update to different type', function (t) {
   })
 })
 
+test('put with pre-set id', function (t) {
+  var node = {
+    type: 'node',
+    changeset: '9',
+    lat: '-11',
+    lon: '-10',
+    timestamp: '2017-10-10T19:55:08.570Z',
+    id: 'PLACEHOLDER'
+  }
+
+  t.plan(4)
+
+  var db = createDb()
+
+  db.put('foobar', node, function (err, elm) {
+    t.error(err)
+    t.notEquals('PLACEHOLDER', elm.id)
+    db.getByVersion(elm.version, function (err, elm) {
+      t.error(err)
+      t.notEquals('PLACEHOLDER', elm.id)
+    })
+  })
+})
+
 test('update good nodes', function (t) {
   var nodes = [
     {
