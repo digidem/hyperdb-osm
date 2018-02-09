@@ -31,8 +31,9 @@ function Osm (opts) {
 }
 
 Osm.prototype.ready = function (cb) {
+  var self = this
   this.refs.ready(function () {
-    this.geo.ready(function () {
+    self.geo.ready(function () {
       cb()
     })
   })
