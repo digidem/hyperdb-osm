@@ -135,6 +135,7 @@ Osm.prototype.put = function (id, element, opts, cb) {
 Osm.prototype.batch = function (ops, cb) {
   var self = this
   var batch = ops.map(function (op) {
+    op = Object.assign({}, op)
     var prefix = self.dbPrefix + '/elements/'
     if (!op.id) op.id = prefix + utils.generateId()
     else op.id = prefix + op.id
