@@ -101,7 +101,13 @@ Osm.prototype.getByVersion = function (osmVersion, cb) {
 }
 
 // OsmId, OsmElement -> OsmElement
-Osm.prototype.put = function (id, element, cb) {
+Osm.prototype.put = function (id, element, opts, cb) {
+  if (opts && !cb && typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  opts = opts || {}
+
   var self = this
 
   // Check for type errors
