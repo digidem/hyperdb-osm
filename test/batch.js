@@ -4,7 +4,7 @@ var createDb = require('./lib/create-db')
 test('create nodes', function (t) {
   var db = createDb()
 
-  t.plan(1)
+  t.plan(2)
 
   var nodes = [
     {
@@ -29,9 +29,13 @@ test('create nodes', function (t) {
     }
   })
 
-  db.batch(batch, function (err) {
+  db.batch(batch, function (err, elms) {
     t.error(err)
-    // TODO: do a hyperdb#createHistoryStream to check for entries
+    elms.forEach(function (elm) {
+      delete elm.id
+      delete elm.version
+    })
+    t.deepEquals(elms, nodes)
   })
 })
 

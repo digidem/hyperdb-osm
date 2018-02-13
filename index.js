@@ -138,7 +138,16 @@ Osm.prototype.batch = function (ops, cb) {
       value: op.value
     }
   })
-  this.db.batch(batch, cb)
+  this.db.batch(batch, function (err, res) {
+    if (err) return cb(err)
+    res = res.map(function (node, n) {
+      var elm = Object.assign({}, node.value)
+      elm.id = batch[n].key.substring(batch[n].key.lastIndexOf('/') + 1)
+      elm.version = utils.versionFromKeySeq(self.db._writers[node.feed].key, node.seq)
+      return elm
+    })
+    cb(null, res)
+  })
 }
 
 // Id -> { id, version }
