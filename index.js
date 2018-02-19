@@ -6,6 +6,7 @@ var sub = require('subleveldown')
 var collect = require('collect-stream')
 var utils = require('./lib/utils')
 var once = require('once')
+var merge = require('deepmerge')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -142,27 +143,25 @@ Osm.prototype.del = function (id, element, opts, cb) {
 
   var self = this
 
-  element = Object.assign({}, element)
-  element.deleted = true
+  var elmCopy = merge(element, { deleted: true })
 
   // Check for type errors
-  var errs = checkElement(element, 'del')
+  var errs = checkElement(elmCopy, 'del')
   if (errs.length) return cb(errs[0])
 
   // Write to hyperdb
   var key = self.dbPrefix + '/elements/' + id
-  // console.log('updating', key, '->', element)
+  // console.log('updating', key, '->', elmCopy)
 
-  self.db.put(key, element, function (err, node) {
+  self.db.put(key, elmCopy, function (err, node) {
     if (err) return cb(err)
 
     // TODO(noffle): need hyperdb to return the 'node' that was created
     var w = self.db._localWriter
     w.head(function (err, node) {
       if (err) return cb(err)
-      var elm = Object.assign({}, element)
-      elm.id = id
-      elm.version = utils.versionFromKeySeq(w.key, node.seq)
+      var version = utils.versionFromKeySeq(w.key, node.seq)
+      var elm = merge(node.value, { id: id, version: version })
       cb(null, elm)
     })
   })

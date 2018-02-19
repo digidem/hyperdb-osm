@@ -27,6 +27,7 @@
     "collect-stream": "^1.2.1",
     "comparable-storable-types": "^1.0.0",
     "d64": "^1.0.0",
+    "deepmerge": "^2.0.1",
     "hyperdb-index": "^2.0.1",
     "hyperdb-index-level": "^2.0.0",
     "once": "^1.4.0",
