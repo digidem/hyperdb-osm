@@ -132,17 +132,33 @@ Osm.prototype.put = function (id, element, opts, cb) {
   })
 }
 
+// Q: should element validation happen on batch jobs?
 Osm.prototype.batch = function (ops, cb) {
   var self = this
+  cb = once(cb)
+
   var batch = ops.map(function (op) {
     op = Object.assign({}, op)
+
+    if (!op.id) op.id = utils.generateId()
+
     var prefix = self.dbPrefix + '/elements/'
-    if (!op.id) op.id = prefix + utils.generateId()
-    else op.id = prefix + op.id
-    return {
-      type: 'put',
-      key: op.id,
-      value: op.value
+    op.id = prefix + op.id
+
+    if (op.type === 'put') {
+      return {
+        type: 'put',
+        key: op.id,
+        value: op.value
+      }
+    } else if (op.type === 'del') {
+      return {
+        type: 'put',
+        key: op.id,
+        value: Object.assign(op.value || {}, { deleted: true })
+      }
+    } else {
+      cb(new Error('unknown type'))
     }
   })
   this.db.batch(batch, function (err, res) {
