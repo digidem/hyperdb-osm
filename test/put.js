@@ -22,7 +22,6 @@ test('update to different type', function (t) {
   db.create(node, function (err, node) {
     t.error(err)
     db.put(node.id, way, function (err) {
-      console.log('err', err)
       t.ok(err instanceof Error)
     })
   })

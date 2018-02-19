@@ -29,6 +29,25 @@ test('incorrect db init', function (t) {
   }
 })
 
+test('cannot create element with truthy "deleted" field', function (t) {
+  t.plan(1)
+
+  var db = createDb()
+
+  var node = {
+    type: 'node',
+    changeset: '9',
+    lat: '-11',
+    lon: '-10',
+    timestamp: '2017-10-10T19:55:08.570Z',
+    deleted: true
+  }
+
+  db.create(node, function (err) {
+    t.ok(err instanceof Error)
+  })
+})
+
 test('create unknown element', function (t) {
   t.plan(1)
 

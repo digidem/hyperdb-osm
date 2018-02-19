@@ -44,7 +44,7 @@ Osm.prototype.create = function (element, cb) {
   var self = this
 
   // Element format verification
-  var errs = checkElement(element)
+  var errs = checkElement(element, 'put')
   if (errs.length) return cb(errs[0])
 
   utils.populateElementDefaults(element)
@@ -111,13 +111,49 @@ Osm.prototype.put = function (id, element, opts, cb) {
   var self = this
 
   // Check for type errors
-  var errs = checkElement(element)
+  var errs = checkElement(element, 'put')
   if (errs.length) return cb(errs[0])
 
   // Write to hyperdb
   var key = self.dbPrefix + '/elements/' + id
   // console.log('updating', key, '->', element)
   self.db.put(key, element, function (err) {
+    if (err) return cb(err)
+
+    // TODO(noffle): need hyperdb to return the 'node' that was created
+    var w = self.db._localWriter
+    w.head(function (err, node) {
+      if (err) return cb(err)
+      var elm = Object.assign({}, element)
+      elm.id = id
+      elm.version = utils.versionFromKeySeq(w.key, node.seq)
+      cb(null, elm)
+    })
+  })
+}
+
+// OsmId, OsmElement -> OsmElement
+Osm.prototype.del = function (id, element, opts, cb) {
+  if (opts && !cb && typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  opts = opts || {}
+
+  var self = this
+
+  element = Object.assign({}, element)
+  element.deleted = true
+
+  // Check for type errors
+  var errs = checkElement(element, 'del')
+  if (errs.length) return cb(errs[0])
+
+  // Write to hyperdb
+  var key = self.dbPrefix + '/elements/' + id
+  // console.log('updating', key, '->', element)
+
+  self.db.put(key, element, function (err, node) {
     if (err) return cb(err)
 
     // TODO(noffle): need hyperdb to return the 'node' that was created
