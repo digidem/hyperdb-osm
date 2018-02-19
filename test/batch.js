@@ -88,7 +88,7 @@ test('create + update nodes', function (t) {
 test('create + delete nodes', function (t) {
   var db = createDb()
 
-  t.plan(9)
+  t.plan(10)
 
   var nodes = [
     {
@@ -123,14 +123,20 @@ test('create + delete nodes', function (t) {
         type: 'del',
         id: elmId,
         value: { changeset: '10' }
+      },
+      {
+        type: 'put',
+        value: { type: 'node', changeset: '8', lat: '0', lon: '0' }
       }
     ]
     db.batch(batch2, function (err, elms) {
       t.error(err)
-      t.equals(elms.length, 1)
+      t.equals(elms.length, 2)
       t.notEqual(elms[0].version, elmVersion)
       delete elms[0].version
       t.deepEquals(elms[0], { id: elmId, deleted: true, changeset: '10' })
+      clearIdVersion(elms[1])
+      t.deepEquals(elms[1], { type: 'node', changeset: '8', lat: '0', lon: '0' })
 
       db.get(elmId, function (err, elms) {
         t.error(err)
