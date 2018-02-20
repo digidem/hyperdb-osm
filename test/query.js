@@ -438,6 +438,40 @@ test('return only latest way that references a node', function (t) {
   })
 })
 
+test('deleted lone node', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    db.del('A', { changeset: '4' }, function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 1)
+        t.equals(res[0].id, 'B')
+        t.end()
+      })
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
