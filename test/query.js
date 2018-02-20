@@ -71,8 +71,8 @@ test('query random dataset', function (t) {
     .map(function () {
       return {
         type: 'node',
-        lat: Math.random() * 10 - 5,
-        lon: Math.random() * 10 - 5
+        lat: String(Math.random() * 10 - 5),
+        lon: String(Math.random() * 10 - 5)
       }
     })
     .map(function (node) {
