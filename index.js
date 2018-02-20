@@ -56,18 +56,11 @@ Osm.prototype.create = function (element, cb) {
   // Write the element to the db
   var key = this.dbPrefix + '/elements/' + id
   // console.log('creating', key, '->', element)
-  this.db.put(key, element, function (err) {
+  this.db.put(key, element, function (err, node) {
     if (err) return cb(err)
-    var w = self.db._localWriter
-    w.head(function (err, node) {
-      if (err) return cb(err)
-
-      // TODO(noffle): need hyperdb to return the 'node' that was created
-      var elm = Object.assign({}, element)
-      elm.id = id
-      elm.version = utils.versionFromKeySeq(w.key, node.seq)
-      cb(null, elm)
-    })
+    var version = utils.versionFromKeySeq(self.db._localWriter.key, node.seq)
+    var elm = merge(node.value, { id: id, version: version })
+    cb(null, elm)
   })
 }
 
@@ -118,18 +111,11 @@ Osm.prototype.put = function (id, element, opts, cb) {
   // Write to hyperdb
   var key = self.dbPrefix + '/elements/' + id
   // console.log('updating', key, '->', element)
-  self.db.put(key, element, function (err) {
+  self.db.put(key, element, function (err, node) {
     if (err) return cb(err)
-
-    // TODO(noffle): need hyperdb to return the 'node' that was created
-    var w = self.db._localWriter
-    w.head(function (err, node) {
-      if (err) return cb(err)
-      var elm = Object.assign({}, element)
-      elm.id = id
-      elm.version = utils.versionFromKeySeq(w.key, node.seq)
-      cb(null, elm)
-    })
+    var version = utils.versionFromKeySeq(self.db._localWriter.key, node.seq)
+    var elm = merge(node.value, { id: id, version: version })
+    cb(null, elm)
   })
 }
 
@@ -155,15 +141,9 @@ Osm.prototype.del = function (id, element, opts, cb) {
 
   self.db.put(key, elmCopy, function (err, node) {
     if (err) return cb(err)
-
-    // TODO(noffle): need hyperdb to return the 'node' that was created
-    var w = self.db._localWriter
-    w.head(function (err, node) {
-      if (err) return cb(err)
-      var version = utils.versionFromKeySeq(w.key, node.seq)
-      var elm = merge(node.value, { id: id, version: version })
-      cb(null, elm)
-    })
+    var version = utils.versionFromKeySeq(self.db._localWriter.key, node.seq)
+    var elm = merge(node.value, { id: id, version: version })
+    cb(null, elm)
   })
 }
 
