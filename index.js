@@ -152,40 +152,43 @@ Osm.prototype.batch = function (ops, cb) {
   var self = this
   cb = once(cb)
 
-  var batch = ops.map(function (op) {
-    op = Object.assign({}, op)
+  var batch = ops.map(osmOpToHyperdbOp)
 
-    if (!op.id) op.id = utils.generateId()
+  this.db.batch(batch, function (err, res) {
+    if (err) return cb(err)
+    res = res.map(function (node, n) {
+      return merge(node.value, {
+        id: hyperdbKeyToId(batch[n].key),
+        version: utils.versionFromKeySeq(self.db._writers[node.feed].key, node.seq)
+      })
+    })
+    cb(null, res)
+  })
 
+  function hyperdbKeyToId (key) {
+    return key.substring(key.lastIndexOf('/') + 1)
+  }
+
+  function osmOpToHyperdbOp (op) {
     var prefix = self.dbPrefix + '/elements/'
-    op.id = prefix + op.id
+    var id = prefix + (op.id || utils.generateId())
 
     if (op.type === 'put') {
       return {
         type: 'put',
-        key: op.id,
+        key: id,
         value: op.value
       }
     } else if (op.type === 'del') {
       return {
         type: 'put',
-        key: op.id,
-        value: Object.assign(op.value || {}, { deleted: true })
+        key: id,
+        value: merge(op.value || {}, { deleted: true })
       }
     } else {
       cb(new Error('unknown type'))
     }
-  })
-  this.db.batch(batch, function (err, res) {
-    if (err) return cb(err)
-    res = res.map(function (node, n) {
-      var elm = Object.assign({}, node.value)
-      elm.id = batch[n].key.substring(batch[n].key.lastIndexOf('/') + 1)
-      elm.version = utils.versionFromKeySeq(self.db._writers[node.feed].key, node.seq)
-      return elm
-    })
-    cb(null, res)
-  })
+  }
 }
 
 // Id -> { id, version }
