@@ -464,8 +464,55 @@ test('deleted lone node', function (t) {
       t.error(err)
       db.query([[-10, 10], [-10, 10]], function (err, res) {
         t.error(err)
-        t.equals(res.length, 1)
-        t.equals(res[0].id, 'B')
+        t.equals(res.length, 2)
+        res.sort(cmpId)
+        t.equals(res[0].id, 'A')
+        t.equals(res[0].deleted, true)
+        t.equals(res[1].id, 'B')
+        t.end()
+      })
+    })
+  })
+})
+
+test('deleted node of a way', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2' },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'] }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C', 'D' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    db.del('B', { changeset: '4' }, function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 4)
+        res.sort(cmpId)
+        var ids = res.map(e => e.id)
+        t.deepEquals(ids, ['A', 'B', 'C', 'D'])
+        t.equals(res[1].deleted, true)
         t.end()
       })
     })
@@ -477,4 +524,10 @@ function collect (stream, cb) {
   stream.on('data', res.push.bind(res))
   stream.once('end', cb.bind(null, null, res))
   stream.once('error', cb.bind(null))
+}
+
+function cmpId (a, b) {
+  if (a.id < b.id) return -1
+  else if (a.id > b.id) return 1
+  else return 0
 }

@@ -273,9 +273,6 @@ Osm.prototype.query = function (bbox, opts, cb) {
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
 
-      // Skip deleted nodes
-      if (elm.deleted) return next()
-
       add(elm, 0)
 
       // Get all referrer ways and relations recursively.
