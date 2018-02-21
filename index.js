@@ -266,6 +266,10 @@ Osm.prototype.query = function (bbox, opts, cb) {
     return !alreadySeen
   }
 
+  function isWay (elm) {
+    return elm.type === 'way'
+  }
+
   // TODO: can we up the concurrency here & rely on automatic backpressure?
   function onPoint (version, _, next) {
     next = once(next)
@@ -273,11 +277,11 @@ Osm.prototype.query = function (bbox, opts, cb) {
     self.getByVersion(version, function (err, elm) {
       if (err) return next(err)
 
-      add(elm, 0)
-
       // Get all referrer ways and relations recursively.
       getRefererElementsRec(elm, 0, function (err, res) {
         if (err) return next(err)
+        var noWays = res.some(isWay)
+        if (!res.length || noWays) add(elm, 0)
         if (!res.length) return next()
 
         // For each element that refers to the node, get all of its forked
