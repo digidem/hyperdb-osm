@@ -155,7 +155,7 @@ test('update bad nodes', function (t) {
   })
 })
 
-test('delete a node', function (t) {
+test('soft delete a node', function (t) {
   t.plan(6)
 
   var db = createDb()
