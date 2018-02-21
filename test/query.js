@@ -519,6 +519,60 @@ test('deleted node of a way', function (t) {
   })
 })
 
+test('update a node', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '5',
+      lon: '5' },
+    { type: 'way',
+      id: 'D',
+      refs: [ 'A', 'B', 'C' ] }
+  ]
+
+  var newNode = {
+    type: 'node',
+    lat: '1',
+    lon: '1',
+    changeset: '15'
+  }
+
+  var ops = data.map(function (row) {
+    var id = row.id
+    delete row.id
+    return {
+      type: 'put',
+      id: id,
+      value: row
+    }
+  })
+
+  db.batch(ops, function (err, elm) {
+    t.error(err)
+    db.put('A', newNode, function (err) {
+      t.error(err)
+      db.query([[-10, 11], [-10, 11]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 4)
+        res.sort(cmpId)
+        var ids = res.map(e => e.id)
+        t.deepEquals(ids, ['A', 'B', 'C', 'D'])
+        t.end()
+      })
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
