@@ -280,8 +280,14 @@ Osm.prototype.query = function (bbox, opts, cb) {
       // Get all referrer ways and relations recursively.
       getRefererElementsRec(elm, 0, function (err, res) {
         if (err) return next(err)
-        var onlyRelations = res.every(isRelation)
-        if (!res.length || onlyRelations) add(elm, 0)
+
+        // Only add a node here if it can prove that it has only relations
+        // referring to it. Otherwise it'll get picked up by traversing a way
+        // later. This is important for making sure that a deleted way doesn't
+        // return its nodes if they aren't referred to by anything else.
+        var addNode = res.every(isRelation)
+        if (addNode) add(elm, 0)
+
         if (!res.length) return next()
 
         // For each element that refers to the node, get all of its forked
@@ -307,10 +313,14 @@ Osm.prototype.query = function (bbox, opts, cb) {
             })
           }
 
-          getAllHeads(elm.id, function (err, heads) {
-            if (err) return next(err)
+          if (addNode) {
+            getAllHeads(elm.id, function (err, heads) {
+              if (err) return next(err)
+              if (!--pending) return next()
+            })
+          } else {
             if (!--pending) return next()
-          })
+          }
         }
       })
     })
@@ -394,16 +404,13 @@ Osm.prototype.query = function (bbox, opts, cb) {
 
       var pending = refs.length
       for (var i = 0; i < refs.length; i++) {
-        if (seen[gen][refs[i].version]) {
-          if (!--pending) cb(null, res)
-          continue
-        }
         seen[gen][refs[i].id] = true
 
         self.get(refs[i].id, function (err, elms) {
           if (err) return cb(err)
           for (var j = 0; j < elms.length; j++) {
-            if (add(elms[j], gen)) res.push(elms[j])
+            add(elms[j], gen)
+            res.push(elms[j])
           }
           if (!--pending) cb(null, res)
         })

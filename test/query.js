@@ -573,6 +573,105 @@ test('update a node', function (t) {
   })
 })
 
+test('update a way\'s refs', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '5',
+      lon: '5' },
+    { type: 'node',
+      id: 'D',
+      lat: '7',
+      lon: '7' },
+    { type: 'way',
+      id: 'E',
+      refs: [ 'A', 'B', 'C' ] }
+  ]
+
+  var newWay = {
+    type: 'way',
+    refs: [ 'A', 'B', 'D' ],
+    changeset: '15'
+  }
+
+  var ops = data.map(function (row) {
+    var id = row.id
+    delete row.id
+    return {
+      type: 'put',
+      id: id,
+      value: row
+    }
+  })
+
+  db.batch(ops, function (err, elm) {
+    t.error(err)
+    db.put('E', newWay, function (err) {
+      t.error(err)
+      db.query([[-10, 3], [-10, 3]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 4)
+        res.sort(cmpId)
+        var ids = res.map(e => e.id)
+        t.deepEquals(ids, ['A', 'B', 'D', 'E'])
+        t.end()
+      })
+    })
+  })
+})
+
+test('deleted way', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2' },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'] }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C', 'D' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    db.del('D', { changeset: '4' }, function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 1)
+        t.equals(res[0].id, 'D')
+        t.equals(res[0].deleted, true)
+        t.end()
+      })
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
