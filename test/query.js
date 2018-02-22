@@ -672,6 +672,55 @@ test('deleted way', function (t) {
   })
 })
 
+test('deleted relation', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2' },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'] },
+    { type: 'relation',
+      id: 'E',
+      members: [
+        { id: 'C' },
+        { id: 'D' }
+      ] }
+  ]
+
+  var queries = [
+    {
+      bbox: [[-10, 10], [-10, 10]],
+      expected: [ 'A', 'B', 'C', 'D', 'E' ]
+    }
+  ]
+
+  queryTest(t, db, data, queries, function () {
+    db.del('E', { changeset: '4' }, function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        res.sort(cmpId)
+        var ids = res.map(e => e.id)
+        t.deepEquals(ids, ['A', 'B', 'C', 'D', 'E'])
+        t.equals(res[4].deleted, true)
+        t.end()
+      })
+    })
+  })
+})
+
 function collect (stream, cb) {
   var res = []
   stream.on('data', res.push.bind(res))
