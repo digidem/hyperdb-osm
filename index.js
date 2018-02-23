@@ -295,7 +295,7 @@ Osm.prototype.query = function (bbox, opts, cb) {
         var pending = res.length
         for (var i = 0; i < res.length; i++) {
           var elm2 = res[i]
-          if (elm2.type === 'way') {
+          if (elm2.type === 'way' && !elm2.deleted) {
             pending++
             getWayNodes(elm2, function (err, nodes) {
               if (err) return next(err)
