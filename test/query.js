@@ -1,6 +1,7 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
 var queryTest = require('./lib/query-test')
+var collect = require('./lib/collect')
 
 test('no bbox', function (t) {
   t.plan(4)
@@ -720,13 +721,6 @@ test('deleted relation', function (t) {
     })
   })
 })
-
-function collect (stream, cb) {
-  var res = []
-  stream.on('data', res.push.bind(res))
-  stream.once('end', cb.bind(null, null, res))
-  stream.once('error', cb.bind(null))
-}
 
 function cmpId (a, b) {
   if (a.id < b.id) return -1

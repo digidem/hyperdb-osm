@@ -196,6 +196,11 @@ Osm.prototype.getChanges = function (id, cb) {
   return this.refs.getReferersById(id, cb)
 }
 
+// Id -> { id, version }
+Osm.prototype.getReferrers = function (id, cb) {
+  return this.refs.getReferersById(id, cb)
+}
+
 // BoundingBox -> (Stream or Callback)
 Osm.prototype.query = function (bbox, opts, cb) {
   if (opts && !cb && typeof opts === 'function') {

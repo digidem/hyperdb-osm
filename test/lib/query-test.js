@@ -1,17 +1,10 @@
-module.exports = function (t, db, data, expected, cb) {
-  var batch = data.map(function (elm) {
-    var id = elm.id
-    delete elm.id
-    return {
-      type: 'put',
-      id: id,
-      value: elm
-    }
-  })
+var setup = require('./setup')
+var collect = require('./collect')
 
+module.exports = function (t, db, data, expected, cb) {
   expected = expected.slice()
 
-  db.batch(batch, function (err) {
+  setup(db, data, function (err) {
     t.error(err)
 
     ;(function next () {
@@ -34,11 +27,4 @@ module.exports = function (t, db, data, expected, cb) {
       })
     })()
   })
-}
-
-function collect (stream, cb) {
-  var res = []
-  stream.on('data', res.push.bind(res))
-  stream.once('end', cb.bind(null, null, res))
-  stream.once('error', cb.bind(null))
 }

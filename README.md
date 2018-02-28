@@ -164,6 +164,25 @@ Objects of the following form are returned:
 }
 ```
 
+### var rs = osm.getReferrers(id[, cb])
+
+Fetch a list of all OSM ways and relations that refer to the element with ID
+`id`. For a node, this can be ways or relations. For a way or relation, this can
+only be relations.
+
+A callback parameter `cb` is optional. If given, it will be called as `cb(err,
+results)`. If not provided or set to `null`, a Readable stream will be returned
+that can be read from as results are ready.
+
+Objects of the following form are returned:
+
+```js
+{
+  id: '...',
+  version: '...'
+}
+```
+
 ## Deletions
 
 To delete an element, [OSM
