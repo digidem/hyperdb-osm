@@ -99,6 +99,15 @@ replace them all.
 
 `cb` is called with the new element, including `id` and `version` properties.
 
+### osm.del(id, value, cb)
+
+Marks the element `id` as deleted. A deleted document can be `get` and
+`getByVersion`'d like a normal document, and will always have the `{ deleted:
+true }` field set.
+
+Deleted ways, nodes, and relations are all still returned by the `query` API.
+The nodes of a deleted are not included in the results.
+
 ### osm.batch(ops, cb)
 
 Create and update many elements atomically. `ops` is an array of objects
@@ -106,7 +115,7 @@ describing the elements to be added or updated.
 
 ```js
 {
-  type: 'put',
+  type: 'put|del',
   id: 'id',
   value: { /* element */ }
 }
@@ -114,6 +123,9 @@ describing the elements to be added or updated.
 
 If no `id` field is set, the element is created, otherwise it is updated with
 the element `value`.
+
+An operation type of `'put'` inserts a new element or modifies an existing one,
+while a type of`'del'` will mark the element as deleted.
 
 Currently, doing a batch insert skips many validation checks in order to be as
 fast as possible.
@@ -182,15 +194,6 @@ Objects of the following form are returned:
   version: '...'
 }
 ```
-
-## Deletions
-
-To delete an element, [OSM
-specifies](https://wiki.openstreetmap.org/wiki/Elements#Common_attributes) to
-set the `visible` property to `false`. This can be done using the `db.osm.put`
-API above.
-
-*TODO: use `deleted: true` instead of `visible: false`*
 
 ## Architecture
 
