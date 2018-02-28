@@ -354,29 +354,28 @@ test('opts.type: results sorted by type', function (t) {
   })
 })
 
-test.skip('return only latest version of a modified node', function (t) {
+test('return only latest version of a modified node', function (t) {
   var db = createDb()
 
   var node = {
     type: 'node',
-    id: 'A',
     lat: '0',
     lon: '0',
-    tags: {}
+    tags: {},
+    changeset: '9'
   }
-  var queries = [ {
-    bbox: [[-10, 10], [-10, 10]],
-    expected: [ 'A' ]
-  } ]
 
   // Make sure node is present
-  queryTest(t, db, [node], queries, function () {
+  db.put('A', node, function (err) {
+    t.error(err)
+
     // Update node
     node.tags = { foo: 'bar' }
     node.changeset = '123'
+
     db.put('A', node, function (err) {
       t.error(err)
-      db.query(queries[0].bbox, function (err, res) {
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
         t.error(err)
         t.equals(res.length, 1)
         t.equals(res[0].id, 'A')
