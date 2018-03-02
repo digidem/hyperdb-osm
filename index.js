@@ -7,6 +7,7 @@ var collect = require('collect-stream')
 var utils = require('./lib/utils')
 var once = require('once')
 var merge = require('deepmerge')
+var uniq = require('uniq')
 
 var checkElement = require('./lib/check-element')
 var validateBoundingBox = require('./lib/utils').validateBoundingBox
@@ -129,41 +130,79 @@ Osm.prototype.del = function (id, element, opts, cb) {
 
   var self = this
 
-  var elmCopy = merge(element, { deleted: true })
-
   // Check for type errors
-  var errs = checkElement(elmCopy, 'del')
+  var errs = checkElement(element, 'del')
   if (errs.length) return cb(errs[0])
 
-  // Write to hyperdb
-  var key = self.dbPrefix + '/elements/' + id
-  // console.log('updating', key, '->', elmCopy)
-
-  self.db.put(key, elmCopy, function (err, node) {
+  // Retrieve the combined refs/members of all previous known heads.
+  this._getRefsMembers(id, function (err, res) {
     if (err) return cb(err)
-    var version = utils.versionFromKeySeq(self.db._localWriter.key, node.seq)
-    var elm = merge(node.value, { id: id, version: version })
-    cb(null, elm)
+
+    var base = { deleted: true }
+    if (res.refs) base.refs = res.refs
+    else if (res.members) base.members = res.members
+
+    var elmCopy = merge(element, base)
+
+    // Write to hyperdb
+    var key = self.dbPrefix + '/elements/' + id
+    // console.log('deleting', key, '->', elmCopy)
+
+    self.db.put(key, elmCopy, function (err, node) {
+      if (err) return cb(err)
+      var version = utils.versionFromKeySeq(self.db._localWriter.key, node.seq)
+      var elm = merge(node.value, { id: id, version: version })
+      cb(null, elm)
+    })
   })
 }
 
 // Q: should element validation happen on batch jobs?
 Osm.prototype.batch = function (ops, cb) {
+  if (!ops || !ops.length) return cb()
+
   var self = this
   cb = once(cb)
 
-  var batch = ops.map(osmOpToHyperdbOp)
-
-  this.db.batch(batch, function (err, res) {
-    if (err) return cb(err)
-    res = res.map(function (node, n) {
-      return merge(node.value, {
-        id: hyperdbKeyToId(batch[n].key),
-        version: utils.versionFromKeySeq(self.db._writers[node.feed].key, node.seq)
+  // Populate way & relation deletions with correct refs/members.
+  var pending = 0
+  var error
+  for (var i = 0; i < ops.length; i++) {
+    if (ops[i].type === 'del') {
+      pending++
+      updateRefs(ops[i].id, ops[i].value, function (err) {
+        if (err) error = err
+        if (!--pending) write(error)
       })
+    }
+  }
+  if (!pending) write()
+
+  function write (err) {
+    if (err) return cb(err)
+
+    var batch = ops.map(osmOpToHyperdbOp)
+
+    self.db.batch(batch, function (err, res) {
+      if (err) return cb(err)
+      res = res.map(function (node, n) {
+        return merge(node.value, {
+          id: hyperdbKeyToId(batch[n].key),
+          version: utils.versionFromKeySeq(self.db._writers[node.feed].key, node.seq)
+        })
+      })
+      cb(null, res)
     })
-    cb(null, res)
-  })
+  }
+
+  function updateRefs (id, elm, cb) {
+    self._getRefsMembers(id, function (err, res) {
+      if (err) return cb(err)
+      if (res.refs) elm.refs = res.refs
+      else if (res.members) elm.members = res.members
+      cb()
+    })
+  }
 
   function hyperdbKeyToId (key) {
     return key.substring(key.lastIndexOf('/') + 1)
@@ -443,6 +482,43 @@ Osm.prototype.createReplicationStream = function (opts) {
   return this.db.replicate(opts)
 }
 Osm.prototype.replicate = Osm.prototype.createReplicationStream
+
+// OsmId -> {refs: [OsmId]} | {members: [OsmId]} | {}
+Osm.prototype._getRefsMembers = function (id, cb) {
+  var res = {}
+  var key = this.dbPrefix + '/elements/' + id
+
+  this.db.get(key, function (err, nodes) {
+    if (err || !nodes || !nodes.length) return cb(err, {})
+
+    for (var i = 0; i < nodes.length; i++) {
+      var elm = nodes[i].value
+      if (elm.refs) {
+        res.refs = res.refs || []
+        mergeRefs(res.refs, elm.refs)
+      } else if (elm.members) {
+        res.members = res.members || []
+        mergeMembers(res.members, elm.members)
+      }
+    }
+
+    cb(null, res)
+  })
+
+  function mergeRefs (into, from) {
+    into.push.apply(into, from)
+    return uniq(into)
+  }
+
+  function mergeMembers (into, from) {
+    into.push.apply(into, from)
+    return uniq(into, memberCmp)
+  }
+
+  function memberCmp (a, b) {
+    return a.id === b.id ? 0 : -1
+  }
+}
 
 var typeOrder = { node: 0, way: 1, relation: 2 }
 function cmpType (a, b) {

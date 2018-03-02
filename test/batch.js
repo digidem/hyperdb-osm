@@ -1,5 +1,6 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
+var setup = require('./lib/setup')
 
 test('create nodes', function (t) {
   var db = createDb()
@@ -149,7 +150,92 @@ test('create + delete nodes', function (t) {
   })
 })
 
+test('batch: deleted way', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2' },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'] }
+  ]
+
+  setup(db, data, function () {
+    var op = {type: 'del', id: 'D', value: { changeset: '4' }}
+    db.batch([op], function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        t.equals(res.length, 1)
+        t.equals(res[0].id, 'D')
+        t.equals(res[0].deleted, true)
+        t.end()
+      })
+    })
+  })
+})
+
+test('batch: deleted relation', function (t) {
+  var db = createDb()
+
+  var data = [
+    { type: 'node',
+      id: 'A',
+      lat: '0',
+      lon: '0' },
+    { type: 'node',
+      id: 'B',
+      lat: '1',
+      lon: '1' },
+    { type: 'node',
+      id: 'C',
+      lat: '2',
+      lon: '2' },
+    { type: 'way',
+      id: 'D',
+      refs: ['A', 'B', 'C'] },
+    { type: 'relation',
+      id: 'E',
+      members: [
+        { id: 'C' },
+        { id: 'D' }
+      ] }
+  ]
+
+  setup(db, data, function () {
+    var op = {type: 'del', id: 'E', value: { changeset: '4' }}
+    db.batch([op], function (err) {
+      t.error(err)
+      db.query([[-10, 10], [-10, 10]], function (err, res) {
+        t.error(err)
+        res.sort(cmpId)
+        var ids = res.map(e => e.id)
+        t.deepEquals(ids, ['A', 'B', 'C', 'D', 'E'])
+        t.equals(res[4].deleted, true)
+        t.end()
+      })
+    })
+  })
+})
+
 function clearIdVersion (elm) {
   delete elm.id
   delete elm.version
+}
+
+function cmpId (a, b) {
+  if (a.id < b.id) return -1
+  else if (a.id > b.id) return 1
+  else return 0
 }

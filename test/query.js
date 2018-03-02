@@ -630,7 +630,7 @@ test('update a way\'s refs', function (t) {
   })
 })
 
-test.skip('deleted way', function (t) {
+test('deleted way', function (t) {
   var db = createDb()
 
   var data = [
@@ -672,7 +672,7 @@ test.skip('deleted way', function (t) {
   })
 })
 
-test.skip('deleted relation', function (t) {
+test('deleted relation', function (t) {
   var db = createDb()
 
   var data = [

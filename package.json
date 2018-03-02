@@ -36,6 +36,7 @@
     "subleveldown": "^2.1.0",
     "through2": "^2.0.3",
     "to-buffer": "^1.1.0",
+    "uniq": "^1.0.1",
     "varint": "^5.0.0"
   },
   "devDependencies": {
