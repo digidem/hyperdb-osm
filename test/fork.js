@@ -2,7 +2,7 @@ var test = require('tape')
 var createDb = require('./lib/create-db')
 var setup = require('./lib/setup')
 
-test('query empty dataset', function (t) {
+test('2-peer node fork', function (t) {
   t.plan(11)
 
   var elms = [
