@@ -1,17 +1,31 @@
-var hyper = require('hyperdb')
-var Osm = require('../..')
+var hyperdb = require('hyperdb')
+var hyperosm = require('../..')
 var ram = require('random-access-memory')
-var Geo = require('grid-point-store')
+var Grid = require('grid-point-store')
 var memdb = require('memdb')
 
-module.exports = function () {
-  var hyperdb = hyper(ram, { valueEncoding: 'json' })
-  var leveldb = memdb()
-  var pointstore = Geo({store: memdb(), zoomLevel: 10})
-  var db = Osm({
-    db: hyperdb,
-    index: leveldb,
-    pointstore: pointstore
+module.exports = createOne
+module.exports.two = createTwo
+
+function createOne (key) {
+  var db
+  if (key) db = hyperdb(ram, key, { valueEncoding: 'json' })
+  else db = hyperdb(ram, { valueEncoding: 'json' })
+  return hyperosm({
+    db: db,
+    index: memdb(),
+    pointstore: Grid({ store: memdb(), zoomLevel: 10 })
   })
-  return db
+}
+
+function createTwo (cb) {
+  var a = createOne()
+  a.db.ready(function () {
+    var b = createOne(a.db.key)
+    b.db.ready(function () {
+      a.db.authorize(b.db.local.key, function () {
+        cb(a, b)
+      })
+    })
+  })
 }
