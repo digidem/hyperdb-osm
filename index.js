@@ -485,7 +485,7 @@ Osm.prototype.getPreviousHeads = function (osmVersion, cb) {
     if (err) return cb(err)
     utils.getPreviousHeads(self.db, node, function (err, nodes) {
       if (err) return cb(err)
-      var elms = nodes.map(function (node) {
+      var elms = (nodes || []).map(function (node) {
         return Object.assign(node.value, {
           id: utils.hyperDbKeyToId(node.key),
           version: utils.nodeToVersion(self.db, node)
