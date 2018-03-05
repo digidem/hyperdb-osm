@@ -478,6 +478,24 @@ Osm.prototype.query = function (bbox, opts, cb) {
   }
 }
 
+// OsmVersion => [OsmElement]
+Osm.prototype.getPreviousHeads = function (osmVersion, cb) {
+  var self = this
+  utils.versionToNode(this.db, osmVersion, function (err, node) {
+    if (err) return cb(err)
+    utils.getPreviousHeads(self.db, node, function (err, nodes) {
+      if (err) return cb(err)
+      var elms = nodes.map(function (node) {
+        return Object.assign(node.value, {
+          id: utils.hyperDbKeyToId(node.key),
+          version: utils.nodeToVersion(self.db, node)
+        })
+      })
+      cb(null, elms)
+    })
+  })
+}
+
 Osm.prototype.createReplicationStream = function (opts) {
   return this.db.replicate(opts)
 }

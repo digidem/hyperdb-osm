@@ -195,6 +195,29 @@ Objects of the following form are returned:
 }
 ```
 
+### osm.getPreviousHeads(version, cb)
+
+Get all immediately previous versions of the element at `version`.
+
+In the simple case of one writer writing an element and then updating it,
+
+```
+A_1  <--  A_2
+```
+
+`getPreviousHeads(A_2)` would return `[A_2]`.
+
+In a more complex case of two writers that both forked `C_1` and then one wrote
+a new head to merge them,
+
+```
+        /-- C_2 <--\
+C_1 <---            --- C4
+        \-- C_3 <--/
+```
+
+`getPreviousHeads(C_4)` would return `[C_2, C_3]`.
+
 ## Architecture
 
 *TODO: talk about forking data & forking architecture*
