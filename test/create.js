@@ -1,9 +1,6 @@
 var test = require('tape')
 var createDb = require('./lib/create-db')
-var hyper = require('hyperdb')
-var P2P = require('p2p-db')
 var Osm = require('..')
-var ram = require('random-access-memory')
 
 test('incorrect db init', function (t) {
   t.plan(3)
@@ -22,7 +19,7 @@ test('incorrect db init', function (t) {
 
   try {
     Osm({
-      p2pdb: P2P(hyper(ram, { valueEncoding: 'json' }))
+      db: null
     })
   } catch (e) {
     t.ok(e instanceof Error)
