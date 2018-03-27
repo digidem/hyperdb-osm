@@ -88,6 +88,11 @@ Fetch all of the newest OSM elements with the ID `id`. In the case that multiple
 peers modified an element prior to sync'ing with each other, there may be
 multiple latest elements ("heads") for the ID.
 
+### osm.getByVersion(version, cb)
+
+Fetch a specific OSM element by its version string. Returns `null` if not found,
+otherwise the single element.
+
 ### osm.put(id, element, cb)
 
 Update an existing element with ID `id` to be the OSM element `element`. The new
